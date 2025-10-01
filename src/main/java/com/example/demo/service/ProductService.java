@@ -3,6 +3,8 @@ package com.example.demo.service;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +15,7 @@ import com.example.demo.repository.ProductRepository;
 
 
 @Service
+@Transactional(readOnly = true)
 public class ProductService {
     private final ProductRepository productRepository;
 
@@ -30,10 +33,14 @@ public class ProductService {
         return productRepository.findById(id).orElse(null);
     }
 
+    @Transactional
+    @CacheEvict(value = {"products"}, allEntries = true)
     public Product create(Product product) {
         return productRepository.save(product);
     }
 
+    @Transactional
+    @CacheEvict(value = {"products", "product"}, allEntries = true)
     public Product updateById(Long id, Product updatedProduct) {
         return productRepository.findById(id)
                 .map(product -> {
@@ -44,6 +51,8 @@ public class ProductService {
                 .orElse(null);
     }
 
+    @Transactional
+    @CacheEvict(value = {"products", "product"}, allEntries = true)
     public boolean deleteById(Long id) {
         if (productRepository.existsById(id)) {
             productRepository.deleteById(id);
