@@ -2,7 +2,7 @@ package com.example.demo.model;
 
 import java.time.LocalDateTime;
 
-//данные о пассажире, который зашел на остановке
+//данные о пассажире, который зашел в автобус на остановке
 public class PassengerCount {
     private Long id;
     private Bus bus;
