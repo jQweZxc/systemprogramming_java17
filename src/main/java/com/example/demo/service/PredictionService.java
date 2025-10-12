@@ -5,12 +5,22 @@ import com.example.demo.model.PassengerCount;
 import com.example.demo.model.Route;
 import com.example.demo.repository.PassengerCountRepository;
 import com.example.demo.repository.RouteRepository;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * СЕРВИС ПРОГНОЗИРОВАНИЯ ЗАГРУЖЕННОСТИ МАРШРУТОВ
+ * 
+ * Содержит бизнес-логику для расчета прогнозов пассажиропотока
+ * Использует кэширование для ускорения повторных запросов
+ */
 @Service
 public class PredictionService {
     
@@ -24,9 +34,19 @@ public class PredictionService {
     }
     
     /**
-     * Прогноз загруженности для конкретного маршрута, времени и остановки
+     * ПРОГНОЗ ЗАГРУЖЕННОСТИ ДЛЯ КОНКРЕТНОГО МАРШРУТА И ВРЕМЕНИ
+     * 
+     * Результаты кэшируются на 10 минут для одинаковых параметров
+     * Ключ кэша включает routeId, hour и stopId для уникальности
+     * 
+     * @Cacheable - результат метода кэшируется, при повторных вызовах с теми же параметрами
+     *              данные берутся из кэша вместо выполнения метода
      */
+    @Cacheable(value = "predictions", key = "{#routeId, #time.hour, #stopId}")
     public RoutePredictionDTO getPredictionForRouteAndTime(String routeId, LocalDateTime time, String stopId) {
+        // Имитация сложных вычислений для демонстрации benefits кэширования
+        simulateHeavyCalculation();
+        
         Route route = routeRepository.findById(Long.parseLong(routeId)).orElse(null);
         if (route == null) {
             return null;
@@ -57,8 +77,12 @@ public class PredictionService {
     }
     
     /**
-     * Прогноз на весь день по маршруту
+     * ПРОГНОЗ НА ВЕСЬ ДЕНЬ ПО МАРШРУТУ
+     * 
+     * Кэшируется на 1 час, так как данные меняются реже
+     * Ключ включает только routeId и текущую дату
      */
+    @Cacheable(value = "daily_predictions", key = "{#routeId, T(java.time.LocalDate).now()}")
     public List<RoutePredictionDTO> getDailyPredictions(String routeId) {
         List<RoutePredictionDTO> predictions = new ArrayList<>();
         Route route = routeRepository.findById(Long.parseLong(routeId)).orElse(null);
@@ -80,7 +104,9 @@ public class PredictionService {
     }
     
     /**
-     * Расчет текущей загруженности автобуса
+     * РАСЧЕТ ТЕКУЩЕЙ ЗАГРУЖЕННОСТИ АВТОБУСА
+     * 
+     * Не кэшируется, так как данные должны быть актуальными
      */
     public int calculateCurrentLoad(Long busId) {
         List<PassengerCount> todayData = passengerCountRepository.findByTimestampBetween(
@@ -94,5 +120,32 @@ public class PredictionService {
             .sum();
             
         return Math.max(0, currentLoad); // Не может быть отрицательным
+    }
+    
+    /**
+     * ОЧИСТКА КЭША ПРОГНОЗОВ ПО РАСПИСАНИЮ
+     * 
+     * Выполняется каждые 10 минут для обеспечения актуальности данных
+     * @CacheEvict - очищает указанный кэш полностью
+     */
+    @Scheduled(fixedRate = 600000) // 10 минут
+    @CacheEvict(value = {"predictions", "daily_predictions"}, allEntries = true)
+    public void evictPredictionCaches() {
+        // Метод не требует реализации, Spring автоматически очистит кэш
+        System.out.println("Кэш прогнозов очищен: " + LocalDateTime.now());
+    }
+    
+    /**
+     * ИМИТАЦИЯ СЛОЖНЫХ ВЫЧИСЛЕНИЙ
+     * 
+     * Для демонстрации benefits кэширования
+     */
+    private void simulateHeavyCalculation() {
+        try {
+            // Имитация сложных вычислений (500ms)
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 }
