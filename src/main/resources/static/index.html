@@ -3,22 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Управление продуктами</title>
+    <title>🚌 Система управления пассажиропотоком</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         body {
-            background-color: #f8f9fa;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
             padding-top: 20px;
         }
         .card {
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             border: none;
-            border-radius: 10px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
         }
         .table th {
-            background-color: #495057;
+            background: linear-gradient(135deg, #495057, #6c757d);
             color: white;
+            border: none;
         }
         .btn-sm {
             padding: 0.25rem 0.5rem;
@@ -30,70 +34,226 @@
             align-items: center;
             margin-bottom: 20px;
         }
+        .nav-tabs .nav-link.active {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+        }
+        .load-indicator {
+            height: 8px;
+            border-radius: 4px;
+            margin-top: 5px;
+        }
+        .load-low { background: #28a745; }
+        .load-medium { background: #ffc107; }
+        .load-high { background: #dc3545; }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
     <div class="container mt-4">
-        <div class="card p-4">
-            <!-- Заголовок с кнопкой добавления -->
-            <div class="header-actions">
-                <h2 class="mb-0"><i class="fas fa-boxes me-2"></i>Управление продуктами</h2>
-                <button class="btn btn-success" onclick="addProduct()">
-                    <i class="fas fa-plus me-1"></i>Добавить продукт
-                </button>
-            </div>
+        <!-- Заголовок системы -->
+        <div class="text-center mb-4">
+            <h1 class="text-white"><i class="fas fa-bus me-2"></i>Система управления пассажиропотоком</h1>
+            <p class="text-white-50">Мониторинг и прогнозирование загруженности общественного транспорта</p>
+        </div>
 
-            <!-- Форма фильтрации -->
-            <form id="filterForm" class="mb-4 mt-4">
-                <div class="row g-3 align-items-end">
-                    <div class="col-md-4">
-                        <label class="form-label">Название</label>
-                        <input type="text" id="titleFilter" class="form-control" placeholder="Поиск по названию...">
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Мин. цена</label>
-                        <input type="number" id="minCost" class="form-control" placeholder="0">
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Макс. цена</label>
-                        <input type="number" id="maxCost" class="form-control" placeholder="1000000">
-                    </div>
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="fas fa-search me-1"></i>Поиск
+        <!-- Навигационные вкладки -->
+        <ul class="nav nav-tabs mb-4" id="mainTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="passengers-tab" data-bs-toggle="tab" 
+                        data-bs-target="#passengers" type="button" role="tab">
+                    <i class="fas fa-users me-1"></i>Пассажиропоток
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="predictions-tab" data-bs-toggle="tab" 
+                        data-bs-target="#predictions" type="button" role="tab">
+                    <i class="fas fa-chart-line me-1"></i>Прогнозы
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="stops-tab" data-bs-toggle="tab" 
+                        data-bs-target="#stops" type="button" role="tab">
+                    <i class="fas fa-map-marker-alt me-1"></i>Остановки
+                </button>
+            </li>
+        </ul>
+
+        <!-- Содержимое вкладок -->
+        <div class="tab-content">
+            <!-- Вкладка пассажиропотока -->
+            <div class="tab-pane fade show active" id="passengers" role="tabpanel">
+                <div class="card p-4">
+                    <div class="header-actions">
+                        <h3 class="mb-0"><i class="fas fa-users me-2"></i>Учет пассажиропотока</h3>
+                        <button class="btn btn-success" onclick="addPassengerCount()">
+                            <i class="fas fa-plus me-1"></i>Добавить запись
                         </button>
                     </div>
-                    <div class="col-md-2">
-                        <button type="button" class="btn btn-secondary w-100" onclick="clearFilters()">
-                            <i class="fas fa-times me-1"></i>Сбросить
-                        </button>
+
+                    <!-- Статистика -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <h5><i class="fas fa-sign-in-alt me-2"></i>Всего вошло</h5>
+                                <h3 id="totalEntered">0</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <h5><i class="fas fa-sign-out-alt me-2"></i>Всего вышло</h5>
+                                <h3 id="totalExited">0</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <h5><i class="fas fa-exchange-alt me-2"></i>Чистый поток</h5>
+                                <h3 id="netPassengers">0</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <h5><i class="fas fa-chart-bar me-2"></i>Всего записей</h5>
+                                <h3 id="totalRecords">0</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Таблица данных -->
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Автобус</th>
+                                    <th>Остановка</th>
+                                    <th>Вошло</th>
+                                    <th>Вышло</th>
+                                    <th>Время</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody id="passengerTableBody">
+                                <!-- Данные загружаются через JavaScript -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            </form>
-
-            <!-- Таблица продуктов -->
-            <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>ID</th>
-                            <th>Название</th>
-                            <th>Цена</th>
-                            <th>Действия</th>
-                        </tr>
-                    </thead>
-                    <tbody id="productTableBody">
-                        <!-- Данные загружаются через JavaScript -->
-                    </tbody>
-                </table>
             </div>
 
-            <!-- Пагинация -->
-            <nav aria-label="Навигация по страницам" class="mt-4">
-                <ul class="pagination justify-content-center" id="pagination">
-                    <!-- Кнопки пагинации -->
-                </ul>
-            </nav>
+            <!-- Вкладка прогнозов -->
+            <div class="tab-pane fade" id="predictions" role="tabpanel">
+                <div class="card p-4">
+                    <h3 class="mb-4"><i class="fas fa-chart-line me-2"></i>Прогнозы загруженности</h3>
+                    
+                    <!-- Форма для прогноза -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label">Маршрут</label>
+                            <select id="routeSelect" class="form-select">
+                                <option value="">Выберите маршрут...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Время</label>
+                            <input type="time" id="predictionTime" class="form-control" value="15:00">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">&nbsp;</label>
+                            <button class="btn btn-primary w-100" onclick="getPrediction()">
+                                <i class="fas fa-calculator me-1"></i>Рассчитать прогноз
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Результаты прогноза -->
+                    <div id="predictionResult" class="d-none">
+                        <div class="alert alert-info">
+                            <h5><i class="fas fa-info-circle me-2"></i>Прогноз загруженности</h5>
+                            <div class="mt-2">
+                                <strong>Маршрут:</strong> <span id="predRoute"></span><br>
+                                <strong>Время:</strong> <span id="predTime"></span><br>
+                                <strong>Загруженность:</strong> <span id="predLoad"></span>%
+                                <div class="load-indicator" id="loadIndicator"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ежедневные прогнозы -->
+                    <div class="mt-4">
+                        <h5>Прогноз на весь день</h5>
+                        <button class="btn btn-outline-primary mb-3" onclick="getDailyPredictions()">
+                            <i class="fas fa-calendar-alt me-1"></i>Загрузить ежедневный прогноз
+                        </button>
+                        <div id="dailyPredictions"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Вкладка остановок -->
+            <div class="tab-pane fade" id="stops" role="tabpanel">
+                <div class="card p-4">
+                    <div class="header-actions">
+                        <h3 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Управление остановками</h3>
+                        <button class="btn btn-success" onclick="addStop()">
+                            <i class="fas fa-plus me-1"></i>Добавить остановку
+                        </button>
+                    </div>
+
+                    <!-- Поиск ближайших остановок -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <h5><i class="fas fa-search-location me-2"></i>Поиск ближайших остановок</h5>
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-3">
+                                    <label class="form-label">Широта</label>
+                                    <input type="number" id="searchLat" class="form-control" placeholder="55.7558" step="0.0001">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Долгота</label>
+                                    <input type="number" id="searchLon" class="form-control" placeholder="37.6173" step="0.0001">
+                                </div>
+                                <div class="col-md-3">
+                                    <button class="btn btn-primary w-100" onclick="findNearbyStops()">
+                                        <i class="fas fa-search me-1"></i>Найти
+                                    </button>
+                                </div>
+                                <div class="col-md-3">
+                                    <button class="btn btn-secondary w-100" onclick="useCurrentLocation()">
+                                        <i class="fas fa-location-arrow me-1"></i>Мое местоположение
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Таблица остановок -->
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Название</th>
+                                    <th>Широта</th>
+                                    <th>Долгота</th>
+                                    <th>Статистика</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stopsTableBody">
+                                <!-- Данные загружаются через JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -101,212 +261,282 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        let currentPage = 0;
+        // Основные функции для работы с пассажиропотоком
+        let currentPassengerPage = 0;
         const pageSize = 10;
 
-        // Загрузка продуктов
-        function loadProducts(params = {}) {
-            const queryParams = new URLSearchParams({
-                ...params,
-                page: params.page || currentPage,
-                size: pageSize
-            });
-
-            fetch(`/products/filter?${queryParams}`)
-                .then(response => response.json())
+        // Загрузка данных о пассажирах
+        function loadPassengerData() {
+            fetch('/api/passengers')
+                .then(response => {
+                    if (!response.ok) throw new Error('Ошибка загрузки данных');
+                    return response.json();
+                })
                 .then(data => {
-                    const tbody = document.getElementById('productTableBody');
+                    const tbody = document.getElementById('passengerTableBody');
                     tbody.innerHTML = '';
 
-                    if (data.content && data.content.length > 0) {
-                        data.content.forEach(product => {
+                    let totalEntered = 0;
+                    let totalExited = 0;
+
+                    if (data && data.length > 0) {
+                        data.forEach(passenger => {
+                            totalEntered += passenger.entered;
+                            totalExited += passenger.exited;
+                            
                             const row = `
                                 <tr>
-                                    <td>${product.id}</td>
-                                    <td>${product.title}</td>
-                                    <td>${formatPrice(product.cost)} ₽</td>
+                                    <td>${passenger.id}</td>
+                                    <td>${passenger.bus ? `Автобус ${passenger.bus.id}` : 'Не указан'}</td>
+                                    <td>${passenger.stop ? passenger.stop.name : 'Не указана'}</td>
+                                    <td><span class="badge bg-success">+${passenger.entered}</span></td>
+                                    <td><span class="badge bg-danger">-${passenger.exited}</span></td>
+                                    <td>${new Date(passenger.timestamp).toLocaleString()}</td>
                                     <td>
-                                        <button class="btn btn-warning btn-sm" onclick="editProduct(${product.id})">
-                                            <i class="fas fa-edit"></i> Изменить
+                                        <button class="btn btn-warning btn-sm" onclick="editPassengerCount(${passenger.id})">
+                                            <i class="fas fa-edit"></i>
                                         </button>
-                                        <button class="btn btn-danger btn-sm ms-1" onclick="deleteProduct(${product.id})">
-                                            <i class="fas fa-trash"></i> Удалить
+                                        <button class="btn btn-danger btn-sm ms-1" onclick="deletePassengerCount(${passenger.id})">
+                                            <i class="fas fa-trash"></i>
                                         </button>
                                     </td>
                                 </tr>
                             `;
-                            tbody.appendChild(document.createElement('tr')).outerHTML = row;
+                            tbody.innerHTML += row;
                         });
-                    } else {
-                        tbody.innerHTML = `<tr><td colspan="4" class="text-center">Нет данных</td></tr>`;
-                    }
 
-                    updatePagination(data.totalPages, data.number);
+                        // Обновляем статистику
+                        document.getElementById('totalEntered').textContent = totalEntered;
+                        document.getElementById('totalExited').textContent = totalExited;
+                        document.getElementById('netPassengers').textContent = totalEntered - totalExited;
+                        document.getElementById('totalRecords').textContent = data.length;
+                    } else {
+                        tbody.innerHTML = `<tr><td colspan="7" class="text-center">Нет данных о пассажиропотоке</td></tr>`;
+                    }
                 })
                 .catch(error => {
                     console.error('Ошибка загрузки:', error);
-                    showAlert('Ошибка загрузки данных', 'danger');
+                    showAlert('Ошибка загрузки данных о пассажирах', 'danger');
                 });
         }
 
-        // Форматирование цены
-        function formatPrice(price) {
-            return new Intl.NumberFormat('ru-RU').format(price);
-        }
+        // Добавление записи о пассажирах
+        function addPassengerCount() {
+            const busId = prompt('ID автобуса:');
+            const stopId = prompt('ID остановки:');
+            const entered = prompt('Количество вошедших:');
+            const exited = prompt('Количество вышедших:');
 
-        // Пагинация
-        function updatePagination(totalPages, currentPage) {
-            const pagination = document.getElementById('pagination');
-            pagination.innerHTML = '';
-
-            if (totalPages <= 1) return;
-
-            // Кнопка "Назад"
-            if (currentPage > 0) {
-                const prevLi = document.createElement('li');
-                prevLi.className = 'page-item';
-                const prevA = document.createElement('a');
-                prevA.className = 'page-link';
-                prevA.href = '#';
-                prevA.innerHTML = '&laquo;';
-                prevA.onclick = (e) => {
-                    e.preventDefault();
-                    loadProducts({ page: currentPage - 1 });
-                };
-                prevLi.appendChild(prevA);
-                pagination.appendChild(prevLi);
-            }
-
-            // Номера страниц
-            for (let i = 0; i < totalPages; i++) {
-                const li = document.createElement('li');
-                li.className = 'page-item';
-                if (i === currentPage) li.classList.add('active');
-
-                const a = document.createElement('a');
-                a.className = 'page-link';
-                a.href = '#';
-                a.textContent = i + 1;
-                a.onclick = (e) => {
-                    e.preventDefault();
-                    loadProducts({ page: i });
+            if (busId && stopId && entered && exited) {
+                const passengerData = {
+                    bus: { id: parseInt(busId) },
+                    stop: { id: parseInt(stopId) },
+                    entered: parseInt(entered),
+                    exited: parseInt(exited),
+                    timestamp: new Date().toISOString()
                 };
 
-                li.appendChild(a);
-                pagination.appendChild(li);
-            }
-
-            // Кнопка "Вперед"
-            if (currentPage < totalPages - 1) {
-                const nextLi = document.createElement('li');
-                nextLi.className = 'page-item';
-                const nextA = document.createElement('a');
-                nextA.className = 'page-link';
-                nextA.href = '#';
-                nextA.innerHTML = '&raquo;';
-                nextA.onclick = (e) => {
-                    e.preventDefault();
-                    loadProducts({ page: currentPage + 1 });
-                };
-                nextLi.appendChild(nextA);
-                pagination.appendChild(nextLi);
-            }
-        }
-
-        // Добавление продукта
-        function addProduct() {
-            const title = prompt('Введите название продукта:');
-            const cost = prompt('Введите стоимость:');
-
-            if (title && cost) {
-                fetch('/products', {
+                fetch('/api/passengers', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        title: title,
-                        cost: parseInt(cost)
-                    })
+                    body: JSON.stringify(passengerData)
                 })
                 .then(response => {
                     if (response.ok) {
-                        showAlert('Продукт успешно добавлен!', 'success');
-                        loadProducts();
+                        showAlert('Запись о пассажирах успешно добавлена!', 'success');
+                        loadPassengerData();
                     } else {
                         throw new Error('Ошибка добавления');
                     }
                 })
                 .catch(error => {
                     console.error('Ошибка:', error);
-                    showAlert('Ошибка при добавлении продукта', 'danger');
+                    showAlert('Ошибка при добавлении записи', 'danger');
                 });
             }
         }
 
-        // Редактирование продукта
-        function editProduct(id) {
-            const newTitle = prompt('Введите новое название:');
-            const newCost = prompt('Введите новую стоимость:');
-            
-            if (newTitle && newCost) {
-                fetch(`/products/${id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        title: newTitle,
-                        cost: parseInt(newCost)
-                    })
-                })
+        // Получение прогноза загруженности
+        function getPrediction() {
+            const route = document.getElementById('routeSelect').value;
+            const time = document.getElementById('predictionTime').value;
+
+            if (!route) {
+                showAlert('Выберите маршрут', 'warning');
+                return;
+            }
+
+            // Создаем полную дату с временем
+            const now = new Date();
+            const predictionDateTime = new Date(now.toDateString() + ' ' + time);
+
+            fetch(`/api/predictors?route=${route}&time=${predictionDateTime.toISOString()}`)
                 .then(response => {
-                    if (response.ok) {
-                        showAlert('Продукт успешно обновлен!', 'success');
-                        loadProducts();
+                    if (!response.ok) throw new Error('Ошибка расчета прогноза');
+                    return response.json();
+                })
+                .then(data => {
+                    document.getElementById('predRoute').textContent = `Маршрут ${data.route.id}`;
+                    document.getElementById('predTime').textContent = time;
+                    document.getElementById('predLoad').textContent = data.predictedLoad;
+
+                    const indicator = document.getElementById('loadIndicator');
+                    indicator.className = 'load-indicator ';
+                    if (data.predictedLoad < 40) {
+                        indicator.classList.add('load-low');
+                    } else if (data.predictedLoad < 70) {
+                        indicator.classList.add('load-medium');
                     } else {
-                        throw new Error('Ошибка обновления');
+                        indicator.classList.add('load-high');
                     }
+
+                    document.getElementById('predictionResult').classList.remove('d-none');
                 })
                 .catch(error => {
                     console.error('Ошибка:', error);
-                    showAlert('Ошибка при обновлении продукта', 'danger');
+                    showAlert('Ошибка при расчете прогноза', 'danger');
                 });
+        }
+
+        // Поиск ближайших остановок
+        function findNearbyStops() {
+            const lat = document.getElementById('searchLat').value;
+            const lon = document.getElementById('searchLon').value;
+
+            if (!lat || !lon) {
+                showAlert('Введите координаты', 'warning');
+                return;
+            }
+
+            fetch(`/api/stops/nearby?lat=${lat}&lon=${lon}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Ошибка поиска');
+                    return response.json();
+                })
+                .then(stops => {
+                    const resultsDiv = document.createElement('div');
+                    resultsDiv.className = 'mt-3';
+
+                    if (stops.length > 0) {
+                        let html = '<h6>Ближайшие остановки:</h6><div class="list-group">';
+                        stops.forEach(stop => {
+                            html += `
+                                <div class="list-group-item">
+                                    <strong>${stop.name}</strong><br>
+                                    <small>Координаты: ${stop.lat.toFixed(4)}, ${stop.lon.toFixed(4)}</small>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                        resultsDiv.innerHTML = html;
+                    } else {
+                        resultsDiv.innerHTML = '<div class="alert alert-warning">Остановки не найдены в радиусе 2 км</div>';
+                    }
+
+                    // Вставляем результаты после формы поиска
+                    const searchSection = document.querySelector('#stops .row.mb-4');
+                    const existingResults = searchSection.querySelector('.search-results');
+                    if (existingResults) existingResults.remove();
+                    
+                    resultsDiv.className += ' search-results';
+                    searchSection.appendChild(resultsDiv);
+                })
+                .catch(error => {
+                    console.error('Ошибка:', error);
+                    showAlert('Ошибка при поиске остановок', 'danger');
+                });
+        }
+
+        // Использование текущего местоположения
+        function useCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    document.getElementById('searchLat').value = position.coords.latitude.toFixed(6);
+                    document.getElementById('searchLon').value = position.coords.longitude.toFixed(6);
+                    showAlert('Координаты получены', 'success');
+                }, error => {
+                    showAlert('Не удалось получить местоположение', 'danger');
+                });
+            } else {
+                showAlert('Геолокация не поддерживается браузером', 'warning');
             }
         }
 
-        // Удаление продукта
-        function deleteProduct(id) {
-            if (confirm('Вы уверены, что хотите удалить этот продукт?')) {
-                fetch(`/products/${id}`, {
-                    method: 'DELETE'
-                })
+        // Загрузка остановок
+        function loadStops() {
+            fetch('/api/stops')
                 .then(response => {
-                    if (response.ok) {
-                        showAlert('Продукт успешно удален!', 'success');
-                        loadProducts();
+                    if (!response.ok) throw new Error('Ошибка загрузки');
+                    return response.json();
+                })
+                .then(stops => {
+                    const tbody = document.getElementById('stopsTableBody');
+                    tbody.innerHTML = '';
+
+                    if (stops && stops.length > 0) {
+                        stops.forEach(stop => {
+                            const row = `
+                                <tr>
+                                    <td>${stop.id}</td>
+                                    <td><strong>${stop.name}</strong></td>
+                                    <td>${stop.lat}</td>
+                                    <td>${stop.lon}</td>
+                                    <td>
+                                        <button class="btn btn-info btn-sm" onclick="showStopStats(${stop.id})">
+                                            <i class="fas fa-chart-bar"></i> Статистика
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-warning btn-sm" onclick="editStop(${stop.id})">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                            tbody.innerHTML += row;
+                        });
                     } else {
-                        throw new Error('Ошибка удаления');
+                        tbody.innerHTML = `<tr><td colspan="6" class="text-center">Нет данных об остановках</td></tr>`;
                     }
                 })
                 .catch(error => {
-                    console.error('Ошибка:', error);
-                    showAlert('Ошибка при удалении продукта', 'danger');
+                    console.error('Ошибка загрузки:', error);
+                    showAlert('Ошибка загрузки остановок', 'danger');
                 });
-            }
+        }
+
+        // Показать статистику остановки
+        function showStopStats(stopId) {
+            fetch(`/api/stops/${stopId}/stats`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Ошибка загрузки статистики');
+                    return response.json();
+                })
+                .then(stats => {
+                    alert(`Статистика остановки:\n\n` +
+                          `Всего вошло: ${stats.totalEntered}\n` +
+                          `Всего вышло: ${stats.totalExited}\n` +
+                          `Чистый поток: ${stats.netPassengers}`);
+                })
+                .catch(error => {
+                    console.error('Ошибка:', error);
+                    showAlert('Ошибка загрузки статистики', 'danger');
+                });
         }
 
         // Уведомления
         function showAlert(message, type) {
             const alertDiv = document.createElement('div');
-            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 1050; min-width: 300px;';
             alertDiv.innerHTML = `
                 ${message}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             `;
             
-            const container = document.querySelector('.container');
-            container.insertBefore(alertDiv, container.firstChild);
+            document.body.appendChild(alertDiv);
             
             setTimeout(() => {
                 if (alertDiv.parentNode) {
@@ -315,35 +545,24 @@
             }, 5000);
         }
 
-        // Обработка формы фильтрации
-        document.getElementById('filterForm').addEventListener('submit', (      e) => {
-            e.preventDefault();
-            const title = document.getElementById('titleFilter').value.trim();
-            const min = document.getElementById('minCost').value;
-            const max = document.getElementById('maxCost').value;
-
-            currentPage = 0;
-            
-            // Правильная обработка пустых значений
-            const params = {};
-            if (title) params.title = title;
-            if (min && min !== '') params.min = parseInt(min);
-            if (max && max !== '') params.max = parseInt(max);
-    
-            loadProducts(params);
-        });
-
-        // Функция очистки фильтров
-        function clearFilters() {
-            document.getElementById('titleFilter').value = '';
-            document.getElementById('minCost').value = '';
-            document.getElementById('maxCost').value = '';
-            currentPage = 0;
-            loadProducts();
-        }
-
         // Загрузка при старте
-        window.onload = () => loadProducts();
+        window.onload = () => {
+            loadPassengerData();
+            loadStops();
+            
+            // Загружаем маршруты для выпадающего списка
+            fetch('/api/routes')
+                .then(response => response.json())
+                .then(routes => {
+                    const select = document.getElementById('routeSelect');
+                    routes.forEach(route => {
+                        const option = document.createElement('option');
+                        option.value = route.id;
+                        option.textContent = `Маршрут ${route.id}`;
+                        select.appendChild(option);
+                    });
+                });
+        };
     </script>
 </body>
 </html>
