@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Список продуктов</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .table th {
+            background-color: #495057;
+            color: white;
+        }
+        .table-hover tbody tr:hover {
+            background-color: #e9ecef;
+        }
+        .pagination .page-link {
+            color: #007bff;
+        }
+        .pagination .page-item.active .page-link {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="card p-4">
+            <h2 class="mb-4 text-center">Продукты</h2>
+
+            <!-- Форма фильтрации -->
+            <form id="filterForm" class="mb-4">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <input type="text" id="titleFilter" class="form-control" placeholder="Поиск по названию">
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <input type="number" id="minCost" class="form-control" placeholder="Мин. цена">
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <input type="number" id="maxCost" class="form-control" placeholder="Макс. цена">
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <button type="submit" class="btn btn-primary w-100">Фильтровать</button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Таблица продуктов -->
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Название</th>
+                            <th>Цена</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productTableBody">
+                        <!-- Сюда будут добавлены строки -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Пагинация -->
+            <nav aria-label="Навигация по страницам">
+                <ul class="pagination justify-content-center" id="pagination">
+                    <!-- Сюда будут добавлены кнопки пагинации -->
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 0;
+        const pageSize = 10;
+
+        function loadProducts(params = {}) {
+            const queryParams = new URLSearchParams({
+                ...params,
+                page: params.page || currentPage,
+                size: pageSize
+            });
+
+            fetch(`/products/filter?${queryParams}`)
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('productTableBody');
+                    tbody.innerHTML = '';
+
+                    if (data.content && data.content.length > 0) {
+                        data.content.forEach(product => {
+                            const row = `
+                                <tr>
+                                    <td>${product.id}</td>
+                                    <td>${product.title}</td>
+                                    <td>${product.cost} ₽</td>
+                                </tr>
+                            `;
+                            tbody.appendChild(document.createElement('tr')).outerHTML = row;
+                        });
+                    } else {
+                        tbody.innerHTML = `<tr><td colspan="3" class="text-center">Нет данных</td></tr>`;
+                    }
+
+                    // Обновляем пагинацию
+                    updatePagination(data.totalPages, data.number);
+                })
+                .catch(error => console.error('Ошибка загрузки:', error));
+        }
+
+        function updatePagination(totalPages, currentPage) {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+
+            if (totalPages <= 1) return;
+
+            for (let i = 0; i < totalPages; i++) {
+                const li = document.createElement('li');
+                li.className = 'page-item';
+                if (i === currentPage) li.classList.add('active');
+
+                const a = document.createElement('a');
+                a.className = 'page-link';
+                a.href = '#';
+                a.textContent = i + 1;
+                a.onclick = (e) => {
+                    e.preventDefault();
+                    currentPage = i;
+                    loadProducts({ page: i });
+                };
+
+                li.appendChild(a);
+                pagination.appendChild(li);
+            }
+        }
+
+        document.getElementById('filterForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const title = document.getElementById('titleFilter').value.trim();
+            const min = document.getElementById('minCost').value.trim() || null;
+            const max = document.getElementById('maxCost').value.trim() || null;
+
+            currentPage = 0; // Сброс к первой странице при фильтрации
+            loadProducts({ title, min, max });
+        });
+
+        window.onload = () => loadProducts();
+    </script>
+</body>
+</html>

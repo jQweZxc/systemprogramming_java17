@@ -2,7 +2,7 @@ spring:
     profiles:
         active: dev
     application:
-        name: BusProject
+        name: Busprog
         version: 1.0.0
 ---
 spring:
@@ -10,10 +10,10 @@ spring:
         activate:
             on-profile: dev
     datasource:
-        url: jdbc:postgresql://localhost:5432/localhost
+        url: jdbc:postgresql://localhost:5432/postgres
         username: postgres
         password: karleon
-        driver-class-name: org.postgresql.localhost
+
         hikari:
             maximum-pool-size: 20
     
