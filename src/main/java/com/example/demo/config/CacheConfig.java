@@ -1,9 +1,5 @@
 package com.example.demo.config;
 
-import java.beans.BeanProperty;
-import java.util.ArrayList;
-import java.util.Arrays;
-
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
@@ -11,39 +7,43 @@ import org.springframework.cache.support.SimpleCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.Arrays;
+
 /**
- * КОНФИГУРАЦИЯ КЭШИРОВАНИЯ ДАННЫХ
+ * КОНФИГУРАЦИЯ КЭШИРОВАНИЯ ДАННЫХ ДЛЯ СИСТЕМЫ ПАССАЖИРОПОТОКА
  * 
- * Этот класс настраивает кэширование в Spring Boot приложении.
- * Кэширование позволяет хранить часто используемые данные в памяти
- * для ускорения доступа и снижения нагрузки на базу данных.
+ * Настраивает кэширование для ускорения доступа к часто запрашиваемым данным
+ * и снижения нагрузки на базу данных.
  */
-@Configuration // Помечает класс как класс конфигурации Spring
-@EnableCaching // Включает поддержку кэширования в приложении
-public class CacheConfig { 
+@Configuration
+@EnableCaching
+public class CacheConfig {
     
     /**
-     * СОЗДАНИЕ МЕНЕДЖЕРА КЭША
+     * СОЗДАНИЕ МЕНЕДЖЕРА КЭША ДЛЯ СИСТЕМЫ ПАССАЖИРОПОТОКА
      * 
-     * Этот метод создает и настраивает менеджер кэша, который будет
-     * управлять всеми кэшами в приложении.
+     * Настраивает различные кэши для разных типов данных:
+     * - predictions: кэш прогнозов загруженности
+     * - passenger_counts: кэш данных о пассажирах  
+     * - stops: кэш информации об остановках
+     * - routes: кэш данных о маршрутах
      * 
-     * @return CacheManager - менеджер кэша, управляющий кэшами приложения
+     * @return CacheManager - менеджер кэша для управления всеми кэшами приложения
      */
-    @Bean // Помечает метод как создающий bean, который управляется Spring
+    @Bean
     CacheManager cacheManager() {
-        // Создаем простой менеджер кэша на основе ConcurrentMap
         SimpleCacheManager simpleCacheManager = new SimpleCacheManager();
         
-        // Настраиваем кэши приложения:
-        // - "products" - для хранения списков продуктов (множество записей)
-        // - "product"  - для хранения отдельных продуктов (одна запись)
+        // Настраиваем кэши для системы пассажиропотока
         simpleCacheManager.setCaches(Arrays.asList(
-            new ConcurrentMapCache("products"), // Кэш для коллекций продуктов
-            new ConcurrentMapCache("product")   // Кэш для отдельных продуктов
+            new ConcurrentMapCache("predictions"),      // Кэш прогнозов загруженности
+            new ConcurrentMapCache("passenger_counts"), // Кэш данных о пассажирах
+            new ConcurrentMapCache("stops"),           // Кэш информации об остановках
+            new ConcurrentMapCache("routes"),          // Кэш данных о маршрутах
+            new ConcurrentMapCache("buses"),           // Кэш информации об автобусах
+            new ConcurrentMapCache("daily_predictions") // Кэш ежедневных прогнозов
         ));
         
         return simpleCacheManager;
-    } 
-
+    }
 }
