@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
-import com.example.demo.config.ResourceNotFoundException;
+import com.example.demo.exception.ResourceNotFoundException;
+import com.example.demo.dto.PassengerCountDTO;
 import com.example.demo.dto.RoutePredictionDTO;
 import com.example.demo.model.PassengerCount;
 import com.example.demo.service.PassengerCountService;
@@ -13,6 +14,7 @@ import jakarta.validation.Valid;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -32,28 +34,25 @@ public class PassengerFlowController {
     private final PredictionService predictionService;
 
     public PassengerFlowController(PassengerCountService passengerCountService, 
-                                 PredictionService predictionService) {
+                                PredictionService predictionService) {
         this.passengerCountService = passengerCountService;
         this.predictionService = predictionService;
     }
 
-    /**
-     * ПОЛУЧЕНИЕ ВСЕХ ЗАПИСЕЙ О ПАССАЖИРАХ
-     */
-    @Operation(summary = "Получить все записи о пассажиропотоке")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Успешное получение данных"),
-        @ApiResponse(responseCode = "500", description = "Внутренняя ошибка сервера")
-    })
-    @GetMapping("/passengers")
-    public ResponseEntity<List<PassengerCount>> getAllPassengerCounts() {
-        try {
-            List<PassengerCount> passengers = passengerCountService.getAll();
-            return ResponseEntity.ok(passengers);
-        } catch (Exception e) {
-            throw new RuntimeException("Ошибка при получении данных о пассажирах: " + e.getMessage());
-        }
+/**
+ * ПОЛУЧЕНИЕ ВСЕХ ЗАПИСЕЙ О ПАССАЖИРАХ
+ */
+@Operation(summary = "Получить все записи о пассажиропотоке")
+@GetMapping("/passengers")
+public ResponseEntity<List<PassengerCount>> getAllPassengerCounts() {
+    try {
+        List<PassengerCount> passengers = passengerCountService.getAll();
+        return ResponseEntity.ok(passengers);
+    } catch (Exception e) {
+        throw new RuntimeException("Ошибка при получении данных о пассажирах: " + e.getMessage());
     }
+}
+
 
     /**
      * ПОЛУЧЕНИЕ ЗАПИСИ О ПАССАЖИРАХ ПО ID

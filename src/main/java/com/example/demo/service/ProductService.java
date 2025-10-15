@@ -7,9 +7,9 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import com.example.demo.Specification.ProductSpecification;
 import com.example.demo.model.Product;
 import com.example.demo.repository.ProductRepository;
+import com.example.demo.specification.ProductSpecification;
 
 /**
  * СЕРВИСНЫЙ СЛОЙ ДЛЯ РАБОТЫ С ПРОДУКТАМИ

@@ -1,5 +1,9 @@
 package com.example.demo.model;
 
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -31,4 +35,16 @@ public class Stop {
     @Column(nullable = false)
     @NotNull(message = "Долгота не может быть пустой")
     private Double lon;
+
+    @ManyToMany(mappedBy = "stops")
+    @JsonIgnore
+    private List<Route> routes;
+
+    // Дополнительный конструктор без routes
+    public Stop(Long id, String name, Double lat, Double lon) {
+        this.id = id;
+        this.name = name;
+        this.lat = lat;
+        this.lon = lon;
+    }
 }

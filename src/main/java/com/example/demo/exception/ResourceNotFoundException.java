@@ -1,10 +1,5 @@
-package com.example.demo.config;
+package com.example.demo.exception;
 
-/**
- * КАСТОМНОЕ ИСКЛЮЧЕНИЕ "РЕСУРС НЕ НАЙДЕН"
- * 
- * Используется когда запрашиваемый ресурс (продукт, остановка, маршрут) не существует
- */
 public class ResourceNotFoundException extends RuntimeException {
     
     public ResourceNotFoundException(String message) {

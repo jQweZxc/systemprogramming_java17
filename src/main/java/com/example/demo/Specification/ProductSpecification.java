@@ -1,4 +1,4 @@
-package com.example.demo.Specification;
+package com.example.demo.specification;
 
 import org.springframework.data.jpa.domain.Specification;
 

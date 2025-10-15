@@ -1,6 +1,6 @@
 package com.example.demo.controller;
 
-import com.example.demo.config.ResourceNotFoundException;
+import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.Stop;
 import com.example.demo.service.StopService;
 import org.springframework.http.ResponseEntity;

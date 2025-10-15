@@ -27,6 +27,13 @@ public class PredictionService {
     private final PassengerCountRepository passengerCountRepository;
     private final RouteRepository routeRepository;
     
+    // Константы вынесены в поля класса
+    private static final int MAX_BUS_CAPACITY = 50;
+    private static final int PREDICTION_HISTORY_DAYS = 30;
+    private static final int CACHE_EVICTION_RATE_MS = 600000; // 10 минут
+    private static final int WORKING_DAY_START_HOUR = 6;
+    private static final int WORKING_DAY_END_HOUR = 22;
+    
     public PredictionService(PassengerCountRepository passengerCountRepository, 
                            RouteRepository routeRepository) {
         this.passengerCountRepository = passengerCountRepository;
@@ -35,25 +42,16 @@ public class PredictionService {
     
     /**
      * ПРОГНОЗ ЗАГРУЖЕННОСТИ ДЛЯ КОНКРЕТНОГО МАРШРУТА И ВРЕМЕНИ
-     * 
-     * Результаты кэшируются на 10 минут для одинаковых параметров
-     * Ключ кэша включает routeId, hour и stopId для уникальности
-     * 
-     * @Cacheable - результат метода кэшируется, при повторных вызовах с теми же параметрами
-     *              данные берутся из кэша вместо выполнения метода
      */
     @Cacheable(value = "predictions", key = "{#routeId, #time.hour, #stopId}")
     public RoutePredictionDTO getPredictionForRouteAndTime(String routeId, LocalDateTime time, String stopId) {
-        // Имитация сложных вычислений для демонстрации benefits кэширования
-        simulateHeavyCalculation();
-        
         Route route = routeRepository.findById(Long.parseLong(routeId)).orElse(null);
         if (route == null) {
             return null;
         }
         
-        // Расчет средней загруженности в это время за последние 30 дней
-        LocalDateTime startDate = time.minusDays(30);
+        // Используем константу вместо "магического числа"
+        LocalDateTime startDate = time.minusDays(PREDICTION_HISTORY_DAYS);
         LocalDateTime endDate = time;
         
         List<PassengerCount> historicalData = passengerCountRepository.findByTimestampBetween(startDate, endDate);
@@ -70,17 +68,14 @@ public class PredictionService {
             .average()
             .orElse(0.0);
         
-        // Нормализация до процентов (предполагаем макс. вместимость 50 человек)
-        int predictedLoad = (int) Math.min(100, Math.max(0, (averageLoad / 50.0) * 100));
+        // Используем константу MAX_BUS_CAPACITY вместо "50"
+        int predictedLoad = (int) Math.min(100, Math.max(0, (averageLoad / MAX_BUS_CAPACITY) * 100));
         
         return new RoutePredictionDTO(route, time, predictedLoad);
     }
     
     /**
      * ПРОГНОЗ НА ВЕСЬ ДЕНЬ ПО МАРШРУТУ
-     * 
-     * Кэшируется на 1 час, так как данные меняются реже
-     * Ключ включает только routeId и текущую дату
      */
     @Cacheable(value = "daily_predictions", key = "{#routeId, T(java.time.LocalDate).now()}")
     public List<RoutePredictionDTO> getDailyPredictions(String routeId) {
@@ -90,8 +85,8 @@ public class PredictionService {
         if (route != null) {
             LocalDateTime today = LocalDateTime.now().with(LocalTime.MIN);
             
-            // Прогноз на каждый час с 6:00 до 22:00
-            for (int hour = 6; hour <= 22; hour++) {
+            // Используем константы для времени работы
+            for (int hour = WORKING_DAY_START_HOUR; hour <= WORKING_DAY_END_HOUR; hour++) {
                 LocalDateTime predictionTime = today.withHour(hour).withMinute(0);
                 RoutePredictionDTO prediction = getPredictionForRouteAndTime(routeId, predictionTime, null);
                 if (prediction != null) {
@@ -105,8 +100,6 @@ public class PredictionService {
     
     /**
      * РАСЧЕТ ТЕКУЩЕЙ ЗАГРУЖЕННОСТИ АВТОБУСА
-     * 
-     * Не кэшируется, так как данные должны быть актуальными
      */
     public int calculateCurrentLoad(Long busId) {
         List<PassengerCount> todayData = passengerCountRepository.findByTimestampBetween(
@@ -119,33 +112,15 @@ public class PredictionService {
             .mapToInt(pc -> pc.getEntered() - pc.getExited())
             .sum();
             
-        return Math.max(0, currentLoad); // Не может быть отрицательным
+        return Math.max(0, currentLoad);
     }
     
     /**
      * ОЧИСТКА КЭША ПРОГНОЗОВ ПО РАСПИСАНИЮ
-     * 
-     * Выполняется каждые 10 минут для обеспечения актуальности данных
-     * @CacheEvict - очищает указанный кэш полностью
      */
-    @Scheduled(fixedRate = 600000) // 10 минут
+    @Scheduled(fixedRate = CACHE_EVICTION_RATE_MS)
     @CacheEvict(value = {"predictions", "daily_predictions"}, allEntries = true)
     public void evictPredictionCaches() {
-        // Метод не требует реализации, Spring автоматически очистит кэш
-        System.out.println("Кэш прогнозов очищен: " + LocalDateTime.now());
-    }
-    
-    /**
-     * ИМИТАЦИЯ СЛОЖНЫХ ВЫЧИСЛЕНИЙ
-     * 
-     * Для демонстрации benefits кэширования
-     */
-    private void simulateHeavyCalculation() {
-        try {
-            // Имитация сложных вычислений (500ms)
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        // Автоматическая очистка кэша, логирование не требуется
     }
 }

@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name = "routes")
 @Data
@@ -23,8 +25,15 @@ public class Route {
         joinColumns = @JoinColumn(name = "route_id"),
         inverseJoinColumns = @JoinColumn(name = "stop_id")
     )
+    @JsonIgnore
     private List<Stop> stops;
 
     @OneToMany(mappedBy = "route", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Bus> buses;
+
+    // Конструктор только с id
+    public Route(Long id) {
+        this.id = id;
+    }
 }

@@ -1,6 +1,6 @@
 package com.example.demo.controller;
 
-import com.example.demo.config.ResourceNotFoundException;
+import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.Bus;
 import com.example.demo.model.Route;
 import com.example.demo.service.BusService;

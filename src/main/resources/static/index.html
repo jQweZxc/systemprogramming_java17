@@ -89,14 +89,20 @@
         <!-- Содержимое вкладок -->
         <div class="tab-content">
             <!-- Вкладка пассажиропотока -->
-            <div class="tab-pane fade show active" id="passengers" role="tabpanel">
-                <div class="card p-4">
-                    <div class="header-actions">
-                        <h3 class="mb-0"><i class="fas fa-users me-2"></i>Учет пассажиропотока</h3>
-                        <button class="btn btn-success" onclick="addPassengerCount()">
+        <div class="tab-pane fade show active" id="passengers" role="tabpanel">
+            <div class="card p-4">
+                <div class="header-actions">
+                    <h3 class="mb-0"><i class="fas fa-users me-2"></i>Учет пассажиропотока</h3>
+                    <div>
+                        <button class="btn btn-success me-2" onclick="addPassengerCount()">
                             <i class="fas fa-plus me-1"></i>Добавить запись
                         </button>
+                        <!-- ДОБАВЬТЕ И ЗДЕСЬ -->
+                        <button class="btn btn-info" onclick="addBus()">
+                            <i class="fas fa-bus me-1"></i>Добавить автобус
+                        </button>
                     </div>
+                </div>
 
                     <!-- Статистика -->
                     <div class="row mb-4">
@@ -204,6 +210,9 @@
                         <h3 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Управление остановками</h3>
                         <button class="btn btn-success" onclick="addStop()">
                             <i class="fas fa-plus me-1"></i>Добавить остановку
+                        </button>
+                        <button class="btn btn-info" onclick="addBus()">
+                            <i class="fas fa-bus me-1"></i>Добавить автобус
                         </button>
                     </div>
 
@@ -322,41 +331,66 @@
 
         // Добавление записи о пассажирах
         function addPassengerCount() {
-            const busId = prompt('ID автобуса:');
-            const stopId = prompt('ID остановки:');
+            // Показываем доступные ID
+            alert('Перед добавлением убедитесь, что существуют:\n\n' +
+                '✅ Автобусы с ID: 1, 2, 3\n' +
+                '✅ Остановки с ID: 1, 2, 3\n\n' +
+                'Сначала создайте их через Swagger или интерфейс!');
+    
+            const busId = prompt('ID автобуса (должен существовать в БД):');
+            if (!busId) return;
+    
+            const stopId = prompt('ID остановки (должен существовать в БД):');
+            if (!stopId) return;
+    
             const entered = prompt('Количество вошедших:');
+            if (!entered) return;
+    
             const exited = prompt('Количество вышедших:');
+            if (!exited) return;
 
-            if (busId && stopId && entered && exited) {
-                const passengerData = {
-                    bus: { id: parseInt(busId) },
-                    stop: { id: parseInt(stopId) },
-                    entered: parseInt(entered),
-                    exited: parseInt(exited),
-                    timestamp: new Date().toISOString()
-                };
+            // Валидация
+            if (isNaN(busId) || isNaN(stopId) || isNaN(entered) || isNaN(exited)) {
+                showAlert('Все значения должны быть числами!', 'danger');
+                return;
+            }
 
-                fetch('/api/passengers', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(passengerData)
-                })
-                .then(response => {
-                    if (response.ok) {
-                        showAlert('Запись о пассажирах успешно добавлена!', 'success');
-                        loadPassengerData();
-                    } else {
-                        throw new Error('Ошибка добавления');
-                    }
-                })
-                .catch(error => {
-                    console.error('Ошибка:', error);
-                    showAlert('Ошибка при добавлении записи', 'danger');
+            const passengerData = {
+                bus: { id: parseInt(busId) },
+                stop: { id: parseInt(stopId) },
+                entered: parseInt(entered),
+                exited: parseInt(exited),
+                timestamp: new Date().toISOString()
+            };
+
+            console.log('Отправка данных:', passengerData);
+
+            fetch('/api/passengers', {
+                method: 'POST',
+                headers: {
+                'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(passengerData)
+            })
+            .then(response => {
+                if (response.status === 201) {
+                    return response.json();
+                } else {
+                    return response.text().then(text => {
+                    throw new Error(`Ошибка сервера: ${text}`);
+                    });
+                }
+            })
+            .then(data => {
+                console.log('Успех:', data);
+                showAlert('✅ Запись успешно добавлена!', 'success');
+                loadPassengerData();
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                showAlert('❌ Ошибка: Автобус или остановка не найдены. Сначала создайте их!', 'danger');
                 });
             }
-        }
 
         // Получение прогноза загруженности
         function getPrediction() {
@@ -501,12 +535,129 @@
                         tbody.innerHTML = `<tr><td colspan="6" class="text-center">Нет данных об остановках</td></tr>`;
                     }
                 })
+                
                 .catch(error => {
                     console.error('Ошибка загрузки:', error);
                     showAlert('Ошибка загрузки остановок', 'danger');
                 });
         }
 
+        // Функция для создания автобуса
+function addBus() {
+    const model = prompt('Модель автобуса (например: Mercedes Sprinter):');
+    if (!model) return;
+    
+    const routeId = prompt('ID маршрута (если нет маршрута, введите 1):');
+    if (!routeId) return;
+
+    // Валидация
+    if (isNaN(routeId)) {
+        showAlert('ID маршрута должен быть числом!', 'danger');
+        return;
+    }
+
+    const busData = {
+        model: model,
+        route: { id: parseInt(routeId) }
+    };
+
+    console.log('Создание автобуса:', busData);
+
+    fetch('/api/buses', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(busData)
+    })
+    .then(response => {
+        console.log('Статус ответа:', response.status);
+        if (response.ok) {
+            return response.json();
+        } else {
+            return response.text().then(text => {
+                throw new Error(`Ошибка: ${text}`);
+            });
+        }
+    })
+    .then(data => {
+        console.log('Автобус создан:', data);
+        showAlert('✅ Автобус успешно создан! ID: ' + data.id, 'success');
+        
+        // Обновляем список маршрутов в выпадающем списке прогнозов
+        return fetch('/api/routes');
+    })
+    .then(response => response.json())
+    .then(routes => {
+        const select = document.getElementById('routeSelect');
+        select.innerHTML = '<option value="">Выберите маршрут...</option>';
+        routes.forEach(route => {
+            const option = document.createElement('option');
+            option.value = route.id;
+            option.textContent = `Маршрут ${route.id}`;
+            select.appendChild(option);
+        });
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+        let errorMessage = 'Ошибка при создании автобуса';
+        
+        if (error.message.includes('404') || error.message.includes('не найден')) {
+            errorMessage = 'Маршрут не найден! Сначала создайте маршрут через Swagger.';
+        } else if (error.message.includes('500')) {
+            errorMessage = 'Ошибка сервера. Убедитесь, что маршрут существует.';
+        }
+        
+        showAlert('❌ ' + errorMessage, 'danger');
+    });
+}
+
+// Функция для создания остановки (если еще нет)
+function addStop() {
+    const name = prompt('Название остановки:');
+    if (!name) return;
+    
+    const lat = prompt('Широта (например: 55.7558):');
+    if (!lat) return;
+    
+    const lon = prompt('Долгота (например: 37.6173):');
+    if (!lon) return;
+
+    // Валидация
+    if (isNaN(lat) || isNaN(lon)) {
+        showAlert('Широта и долгота должны быть числами!', 'danger');
+        return;
+    }
+
+    const stopData = {
+        name: name,
+        lat: parseFloat(lat),
+        lon: parseFloat(lon)
+    };
+
+    fetch('/api/stops', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(stopData)
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.json();
+        } else {
+            throw new Error('Ошибка создания остановки');
+        }
+    })
+    .then(data => {
+        showAlert('✅ Остановка успешно создана! ID: ' + data.id, 'success');
+        loadStops(); // Обновляем таблицу остановок
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+        showAlert('❌ Ошибка при создании остановки', 'danger');
+    });
+}
         // Показать статистику остановки
         function showStopStats(stopId) {
             fetch(`/api/stops/${stopId}/stats`)
@@ -516,9 +667,9 @@
                 })
                 .then(stats => {
                     alert(`Статистика остановки:\n\n` +
-                          `Всего вошло: ${stats.totalEntered}\n` +
-                          `Всего вышло: ${stats.totalExited}\n` +
-                          `Чистый поток: ${stats.netPassengers}`);
+                        `Всего вошло: ${stats.totalEntered}\n` +
+                        `Всего вышло: ${stats.totalExited}\n` +
+                        `Чистый поток: ${stats.netPassengers}`);
                 })
                 .catch(error => {
                     console.error('Ошибка:', error);
@@ -543,6 +694,83 @@
                     alertDiv.remove();
                 }
             }, 5000);
+        }
+        
+        // Функция для создания остановки
+        function addStop() {
+            const name = prompt('Название остановки:');
+            if (!name) return;
+    
+            const lat = prompt('Широта (например: 55.7558):');
+            if (!lat) return;
+    
+            const lon = prompt('Долгота (например: 37.6173):');
+            if (!lon) return;
+
+            const stopData = {
+                name: name,
+                lat: parseFloat(lat),
+                lon: parseFloat(lon)
+            };
+
+            fetch('/api/stops', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(stopData)
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Ошибка создания остановки');
+                }
+            })
+            .then(data => {
+                showAlert('✅ Остановка успешно создана! ID: ' + data.id, 'success');
+                loadStops();
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                showAlert('❌ Ошибка при создании остановки', 'danger');
+            });
+        }
+
+    // Функция для создания автобуса
+        function addBus() {
+            const model = prompt('Модель автобуса:');
+            if (!model) return;
+    
+            const routeId = prompt('ID маршрута (если нет - создайте через Swagger):');
+            if (!routeId) return;
+
+            const busData = {
+                model: model,
+                route: { id: parseInt(routeId) }
+            };
+
+            fetch('/api/buses', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(busData)
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Ошибка создания автобуса');
+                }
+            })
+            .then(data => {
+                showAlert('✅ Автобус успешно создан! ID: ' + data.id, 'success');
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                showAlert('❌ Ошибка при создании автобуса. Убедитесь, что маршрут существует!', 'danger');
+            });
         }
 
         // Загрузка при старте
