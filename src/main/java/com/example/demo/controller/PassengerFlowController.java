@@ -1,7 +1,7 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.StopStatisticsDTO;
 import com.example.demo.exception.ResourceNotFoundException;
-import com.example.demo.dto.PassengerCountDTO;
 import com.example.demo.dto.RoutePredictionDTO;
 import com.example.demo.model.PassengerCount;
 import com.example.demo.service.PassengerCountService;
@@ -243,7 +243,7 @@ public ResponseEntity<List<PassengerCount>> getAllPassengerCounts() {
             int totalExited = stopData.stream().mapToInt(PassengerCount::getExited).sum();
             
             // Создаем объект статистики
-            StopStatistics stats = new StopStatistics(id, totalEntered, totalExited, totalEntered - totalExited);
+            StopStatisticsDTO stats = new StopStatisticsDTO(id, totalEntered, totalExited, totalEntered - totalExited);
             
             return ResponseEntity.ok(stats);
             
@@ -252,28 +252,5 @@ public ResponseEntity<List<PassengerCount>> getAllPassengerCounts() {
         } catch (Exception e) {
             throw new RuntimeException("Ошибка при расчете статистики: " + e.getMessage());
         }
-    }
-
-    /**
-     * DTO ДЛЯ СТАТИСТИКИ ОСТАНОВКИ
-     */
-    public static class StopStatistics {
-        private final Long stopId;
-        private final int totalEntered;
-        private final int totalExited;
-        private final int netPassengers;
-
-        public StopStatistics(Long stopId, int totalEntered, int totalExited, int netPassengers) {
-            this.stopId = stopId;
-            this.totalEntered = totalEntered;
-            this.totalExited = totalExited;
-            this.netPassengers = netPassengers;
-        }
-
-        // Геттеры
-        public Long getStopId() { return stopId; }
-        public int getTotalEntered() { return totalEntered; }
-        public int getTotalExited() { return totalExited; }
-        public int getNetPassengers() { return netPassengers; }
     }
 }

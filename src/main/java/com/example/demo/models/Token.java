@@ -2,6 +2,8 @@ package com.example.demo.models;
 
 import java.time.LocalDateTime;
 
+import com.example.demo.enums.TokenType;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
