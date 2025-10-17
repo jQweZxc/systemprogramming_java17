@@ -10,20 +10,3 @@ public record PassengerCountDTO(
     Integer exited,
     LocalDateTime timestamp
 ) {}
-
-record BusDTO(
-    Long id,
-    String model,
-    RouteDTO route
-) {}
-
-record StopDTO(
-    Long id,
-    String name,
-    Double lat,
-    Double lon
-) {}
-
-record RouteDTO(
-    Long id
-) {}

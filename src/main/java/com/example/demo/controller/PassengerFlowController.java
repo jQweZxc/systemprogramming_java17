@@ -14,7 +14,6 @@ import jakarta.validation.Valid;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -27,7 +26,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  */
 @RestController
 @RequestMapping("/api")
-@Tag(name = "📊 Пассажиропоток и прогнозы", description = "API для учета пассажиров и прогнозирования загруженности")
+@Tag(name = "Пассажиропоток и прогнозы", description = "API для учета пассажиров и прогнозирования загруженности")
 public class PassengerFlowController {
     
     private final PassengerCountService passengerCountService;

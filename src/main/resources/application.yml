@@ -4,6 +4,8 @@ spring:
     application:
         name: Busprog
         version: 1.0.0
+    main:
+        allow-bean-definition-overriding: true
 ---
 spring:
     config:

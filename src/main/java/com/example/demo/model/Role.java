@@ -2,7 +2,6 @@ package com.example.demo.model;
 
 import java.util.Set;
 
-import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.security.core.GrantedAuthority;
 
 import jakarta.persistence.Entity;

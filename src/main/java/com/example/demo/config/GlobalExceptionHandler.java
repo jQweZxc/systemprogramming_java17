@@ -16,16 +16,13 @@ import java.util.Map;
 
 /**
  * ГЛОБАЛЬНЫЙ ОБРАБОТЧИК ИСКЛЮЧЕНИЙ
- * 
  * Перехватывает и обрабатывает исключения во всем приложении
  * Возвращает структурированные JSON ответы с информацией об ошибках
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-
     /**
      * ОБРАБОТКА ОШИБОК ВАЛИДАЦИИ DTO
-     * 
      * Перехватывает исключения когда входные данные не проходят валидацию
      * Например: пустое название, отрицательная цена и т.д.
      */
@@ -56,7 +53,6 @@ public class GlobalExceptionHandler {
 
     /**
      * ОБРАБОТКА ОБЩИХ ИСКЛЮЧЕНИЙ
-     * 
      * Перехватывает все непредвиденные исключения
      */
     @ExceptionHandler(Exception.class)
@@ -94,7 +90,6 @@ public class GlobalExceptionHandler {
 
     /**
      * DTO ДЛЯ ОТВЕТОВ С ОШИБКАМИ
-     * 
      * Стандартизированная структура для всех ошибок в API
      */
     public static class ErrorResponse {
