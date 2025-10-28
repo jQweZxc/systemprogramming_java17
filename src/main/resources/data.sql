@@ -1,15 +1,9 @@
--- Очистка таблиц (осторожно!)
+-- Очистка таблиц
 DELETE FROM passenger_counts;
 DELETE FROM buses;
 DELETE FROM route_stops;
 DELETE FROM stops;
 DELETE FROM routes;
-
--- Сброс последовательностей (для PostgreSQL)
-ALTER SEQUENCE stops_id_seq RESTART WITH 1;
-ALTER SEQUENCE routes_id_seq RESTART WITH 1;
-ALTER SEQUENCE buses_id_seq RESTART WITH 1;
-ALTER SEQUENCE passenger_counts_id_seq RESTART WITH 1;
 
 -- Создание остановок
 INSERT INTO stops (name, lat, lon) VALUES 
@@ -33,6 +27,6 @@ INSERT INTO buses (model, route_id) VALUES
 
 -- Тестовые данные пассажиропотока
 INSERT INTO passenger_counts (bus_id, stop_id, entered, exited, timestamp) VALUES 
-(1, 1, 5, 2, NOW() - INTERVAL '2 hours'),
-(1, 2, 3, 1, NOW() - INTERVAL '1 hour'),
-(2, 1, 7, 0, NOW());
+(1, 1, 5, 2, CURRENT_TIMESTAMP - INTERVAL '2' HOUR),
+(1, 2, 3, 1, CURRENT_TIMESTAMP - INTERVAL '1' HOUR),
+(2, 1, 7, 0, CURRENT_TIMESTAMP);

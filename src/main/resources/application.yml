@@ -15,7 +15,6 @@ spring:
         url: jdbc:postgresql://localhost:5432/postgres
         username: postgres
         password: karleon
-
         hikari:
             maximum-pool-size: 20
     
@@ -23,6 +22,23 @@ spring:
         database-platform: org.hibernate.dialect.PostgreSQLDialect
         hibernate:
             ddl-auto: update
+    
+    # ДОБАВЬ ЭТИ СВОЙСТВА:
+    servlet:
+        multipart:
+            max-file-size: 10MB
+            max-request-size: 10MB
+
+# ДОБАВЬ ЭТИ СВОЙСТВА:
+upload:
+    path: ./uploads
+
+jwt:
+    secret: 66546A555E5A7234753778214123222A472D4B614E645262356B587032733576
+    expiration: 86400000
+    refresh:
+        expiration: 604800000
+
 server:
     port: 8080
 ---
