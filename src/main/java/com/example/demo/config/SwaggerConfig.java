@@ -9,20 +9,10 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
 
-/**
- * КОНФИГУРАЦИЯ SWAGGER/OPENAPI ДОКУМЕНТАЦИИ
- * 
- * Настраивает автоматическую генерацию документации REST API
- * Документация будет доступна по адресу: http://localhost:8080/swagger-ui.html
- */
+
 @Configuration
 public class SwaggerConfig {
 
-    /**
-     * НАСТРОЙКА OPENAPI ДОКУМЕНТАЦИИ
-     * 
-     * Создает основную информацию о API для отображения в Swagger UI
-     */
     @Bean
     public OpenAPI passengerFlowOpenAPI() {
         Server server = new Server();
