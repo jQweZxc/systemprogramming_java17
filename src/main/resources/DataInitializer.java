@@ -3,13 +3,16 @@ package com.example.demo.config;
 import com.example.demo.model.*;
 import com.example.demo.repository.*;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.HashSet;
 
 @Component
+@Profile("dev")  // Только для dev профиля
 public class DataInitializer implements CommandLineRunner {
     
     private final UserRepository userRepository;
@@ -37,7 +40,16 @@ public class DataInitializer implements CommandLineRunner {
     
     @Override
     public void run(String... args) throws Exception {
+        System.out.println("🚀 Инициализация тестовых данных...");
+        
+        // Проверяем, есть ли уже пользователи
+        if (userRepository.count() > 0) {
+            System.out.println("✅ Данные уже инициализированы");
+            return;
+        }
+        
         // Создаем permissions
+        System.out.println("📋 Создание permissions...");
         Permission busRead = createPermission("BUS", "READ");
         Permission busCreate = createPermission("BUS", "CREATE");
         Permission busUpdate = createPermission("BUS", "UPDATE");
@@ -53,29 +65,36 @@ public class DataInitializer implements CommandLineRunner {
         Permission passengerUpdate = createPermission("PASSENGER", "UPDATE");
         Permission passengerDelete = createPermission("PASSENGER", "DELETE");
         
+        Permission reportRead = createPermission("REPORT", "READ");
+        Permission reportCreate = createPermission("REPORT", "CREATE");
+        
         // Создаем роли
+        System.out.println("👑 Создание ролей...");
         Role adminRole = new Role();
         adminRole.setName("ADMIN");
         adminRole.setPermissions(new HashSet<>(Arrays.asList(
             busRead, busCreate, busUpdate, busDelete,
             stopRead, stopCreate, stopUpdate, stopDelete,
-            passengerRead, passengerCreate, passengerUpdate, passengerDelete
+            passengerRead, passengerCreate, passengerUpdate, passengerDelete,
+            reportRead, reportCreate
         )));
-        roleRepository.save(adminRole);
+        adminRole = roleRepository.save(adminRole);
         
         Role managerRole = new Role();
         managerRole.setName("MANAGER");
         managerRole.setPermissions(new HashSet<>(Arrays.asList(
             busRead, busCreate, busUpdate,
             stopRead, stopCreate, stopUpdate,
-            passengerRead, passengerCreate, passengerUpdate
+            passengerRead, passengerCreate, passengerUpdate,
+            reportRead
         )));
         roleRepository.save(managerRole);
         
         // Создаем пользователей
+        System.out.println("👤 Создание пользователей...");
         User admin = new User();
         admin.setUsername("admin");
-        admin.setPassword(passwordEncoder.encode("admin123"));
+        admin.setPassword(passwordEncoder.encode("admin123"));  // Важно: шифруем пароль
         admin.setEmail("admin@system.com");
         admin.setRole(adminRole);
         userRepository.save(admin);
@@ -88,6 +107,7 @@ public class DataInitializer implements CommandLineRunner {
         userRepository.save(manager);
         
         // Тестовые данные для системы
+        System.out.println("🚌 Создание тестовых данных...");
         Stop stop1 = new Stop();
         stop1.setName("Центральная");
         stop1.setLat(55.7558);
@@ -117,9 +137,11 @@ public class DataInitializer implements CommandLineRunner {
         pc.setTimestamp(LocalDateTime.now().minusHours(2));
         passengerCountRepository.save(pc);
         
+        System.out.println("=".repeat(50));
         System.out.println("✅ Данные успешно инициализированы!");
         System.out.println("👤 Администратор: admin / admin123");
         System.out.println("👤 Менеджер: manager / manager123");
+        System.out.println("=".repeat(50));
     }
     
     private Permission createPermission(String resource, String operation) {

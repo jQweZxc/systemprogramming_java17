@@ -2,31 +2,42 @@ spring:
     profiles:
         active: dev
     application:
-        name: Busprog
-        version: 1.0.0
----
-spring:
-    config:
-        activate:
-            on-profile: dev
+        name: passenger-flow-system
     datasource:
         url: jdbc:postgresql://localhost:5432/postgres
         username: postgres
         password: karleon
-
+        driver-class-name: org.postgresql.Driver
         hikari:
             maximum-pool-size: 20
     
     jpa:
-        database-platform: org.hibernate.dialect.PostgreSQLDialect
         hibernate:
-            ddl-auto: update
+            ddl-auto: create-drop  # ИЗМЕНЕНО: update → create-drop
+        show-sql: true
+        properties:
+            hibernate:
+                format_sql: true
+                jdbc:
+                    batch_size: 20
+                order_inserts: true
+                order_updates: true
+        database-platform: org.hibernate.dialect.PostgreSQLDialect
+    
+    # Telegram
+    telegram:
+        bot:
+            token: "8298138115:AAFqjtK0Yz68FB_8mftP-IFK7BvdslscQWI"
+            username: "qwe24567Bot"
+        log:
+            chat-id: "-5294378665"
+
 server:
     port: 8080
----
-spring:
-    config:
-        activate:
-            on-profile: prod
-server:
-    port: 9001
+
+logging:
+    level:
+        org.hibernate.SQL: DEBUG
+        org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+        com.example.demo: DEBUG
+        org.springframework: INFO

@@ -28,9 +28,15 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
     private static final String SWAGGER_UI_URL = "/swagger-ui/**";
     private static final String API_DOCS_URL = "/v3/api-docs/**";
+    
+    // ОДНО объявление ALLOWED_URLS
     private static final String[] ALLOWED_URLS = {
-            SWAGGER_UI_URL, API_DOCS_URL
+            SWAGGER_UI_URL, 
+            API_DOCS_URL,
+            "/api/telegram-setup/**",
+            "/api/telegram/**"
     };
+    
     private final JwtAuthFilter jwtAuthFilter;
     private final JwtAuthEntryPoint jwtAuthEntryPoint;
 
@@ -40,7 +46,6 @@ public class SecurityConfig {
         return configuration.getAuthenticationManager();
     }
 
-    
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) 
     throws Exception {
@@ -58,10 +63,8 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(authorize -> {
                     authorize.requestMatchers(ALLOWED_URLS).permitAll();
-                    authorize.requestMatchers("/api/auth/login")
-                    .permitAll();
-                    authorize.requestMatchers("/api/auth/refresh")
-                    .permitAll();
+                    authorize.requestMatchers("/api/auth/**").permitAll();
+                    authorize.requestMatchers("/api/**").authenticated();
                     authorize.anyRequest().authenticated();
                 });
         http
@@ -71,7 +74,6 @@ public class SecurityConfig {
                 .exceptionHandling(exception ->
                  exception.authenticationEntryPoint(jwtAuthEntryPoint));
         http
-                // .formLogin(login -> login.loginProcessingUrl("/api/auth/login"))
                 .addFilterBefore(jwtAuthFilter, 
                 UsernamePasswordAuthenticationFilter.class);
         return http.build();

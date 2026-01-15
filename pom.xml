@@ -76,6 +76,7 @@
             <groupId>org.telegram</groupId>
             <artifactId>telegrambots-spring-boot-starter</artifactId>
             <version>${telegrambots.version}</version>
+        
         </dependency>
         
         <!-- Utils -->
