@@ -1,7 +1,9 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.PassengerResponseDto;
 import com.example.demo.model.PassengerCount;
 import com.example.demo.repository.PassengerCountRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
@@ -12,23 +14,40 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class PassengerCountService {
     
     private final PassengerCountRepository passengerCountRepository;
-
-    public PassengerCountService(PassengerCountRepository passengerCountRepository) {
-        this.passengerCountRepository = passengerCountRepository;
-    }
+    
+    // === DTO методы для чтения ===
     
     @Cacheable(value = "passengers", key = "'all'")
-    public List<PassengerCount> getAll() {
-        return passengerCountRepository.findAll();
+    public List<PassengerResponseDto> getAll() {
+        return passengerCountRepository.findAllAsDto();
     }
     
     @Cacheable(value = "passengers", key = "#id")
-    public PassengerCount getById(Long id) {
-        return passengerCountRepository.findById(id).orElse(null);
+    public PassengerResponseDto getById(Long id) {
+        return passengerCountRepository.findDtoById(id)
+            .orElseThrow(() -> new RuntimeException("Passenger not found with id: " + id));
     }
+    
+    @Cacheable(value = "passengers", key = "{'byStop', #stopId}")
+    public List<PassengerResponseDto> getByStopId(Long stopId) {
+        return passengerCountRepository.findByStopIdAsDto(stopId);
+    }
+    
+    @Cacheable(value = "passengers", key = "{'byBus', #busId}")
+    public List<PassengerResponseDto> getByBusId(Long busId) {
+        return passengerCountRepository.findByBusIdAsDto(busId);
+    }
+    
+    @Cacheable(value = "passengers", key = "{'byRoute', #routeId}")
+    public List<PassengerResponseDto> getByRouteId(Long routeId) {
+        return passengerCountRepository.findByRouteIdAsDto(routeId);
+    }
+    
+    // === Методы для сущностей (для создания/обновления) ===
     
     @CacheEvict(value = "passengers", key = "'all'")
     @Transactional
@@ -51,7 +70,7 @@ public class PassengerCountService {
                     passengerCount.setTimestamp(updatedPassengerCount.getTimestamp());
                     return passengerCountRepository.save(passengerCount);
                 })
-                .orElse(null);
+                .orElseThrow(() -> new RuntimeException("Passenger not found with id: " + id));
     }
     
     @Caching(evict = {
@@ -67,20 +86,7 @@ public class PassengerCountService {
         return false;
     }
     
-    @Cacheable(value = "passengers", key = "{'byStop', #stopId}")
-    public List<PassengerCount> getByStopId(Long stopId) {
-        return passengerCountRepository.findByStopId(stopId);
-    }
-    
-    @Cacheable(value = "passengers", key = "{'byBus', #busId}")
-    public List<PassengerCount> getByBusId(Long busId) {
-        return passengerCountRepository.findByBusId(busId);
-    }
-    
-    @Cacheable(value = "passengers", key = "{'byRoute', #routeId}")
-    public List<PassengerCount> getByRouteId(Long routeId) {
-        return passengerCountRepository.findByRouteId(routeId);
-    }
+    // === Дополнительные методы ===
     
     @Cacheable(value = "passengers", key = "{'byPeriod', #start, #end}")
     public List<PassengerCount> getByPeriod(LocalDateTime start, LocalDateTime end) {
@@ -88,16 +94,9 @@ public class PassengerCountService {
     }
     
     /**
-     * АЛЬТЕРНАТИВНЫЙ МЕТОД updateById для совместимости
+     * Получить статистику по остановке за период
      */
-    public PassengerCount updateById(Long id, PassengerCount updatedPassengerCount) {
-        return update(id, updatedPassengerCount);
-    }
-    
-    /**
-     * АЛЬТЕРНАТИВНЫЙ МЕТОД deleteById для совместимости
-     */
-    public boolean deleteById(Long id) {
-        return delete(id);
+    public Object[] getStatsByStopAndPeriod(Long stopId, LocalDateTime start, LocalDateTime end) {
+        return passengerCountRepository.findPassengerStatsByStopAndPeriod(stopId, start, end);
     }
 }

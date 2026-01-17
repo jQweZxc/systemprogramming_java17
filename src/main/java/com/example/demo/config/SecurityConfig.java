@@ -1,5 +1,6 @@
 package com.example.demo.config;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import org.springframework.context.annotation.Bean;
@@ -26,15 +27,13 @@ import lombok.RequiredArgsConstructor;
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-    private static final String SWAGGER_UI_URL = "/swagger-ui/**";
-    private static final String API_DOCS_URL = "/v3/api-docs/**";
     
-    // ОДНО объявление ALLOWED_URLS
+    // Публичные URL
     private static final String[] ALLOWED_URLS = {
-            SWAGGER_UI_URL, 
-            API_DOCS_URL,
-            "/api/telegram-setup/**",
-            "/api/telegram/**"
+        "/swagger-ui/**", 
+        "/v3/api-docs/**",
+        "/api/telegram-setup/**",
+        "/api/telegram/**"
     };
     
     private final JwtAuthFilter jwtAuthFilter;
@@ -49,33 +48,67 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) 
     throws Exception {
-        http
-                .csrf(AbstractHttpConfigurer::disable);
-        http
-                .cors(cors -> cors.configurationSource(request -> {
-                    CorsConfiguration configuration = new CorsConfiguration();
-                    configuration.setAllowedMethods(Collections.singletonList("*"));
-                    configuration.setAllowCredentials(true);
-                    configuration.setAllowedHeaders(Collections.singletonList("*"));
-                    configuration.setMaxAge(3600L);
-                    return configuration;
-                }));
-        http
-                .authorizeHttpRequests(authorize -> {
-                    authorize.requestMatchers(ALLOWED_URLS).permitAll();
-                    authorize.requestMatchers("/api/auth/**").permitAll();
-                    authorize.requestMatchers("/api/**").authenticated();
-                    authorize.anyRequest().authenticated();
-                });
-        http
-                .sessionManagement(session -> session.sessionCreationPolicy(
-                        SessionCreationPolicy.STATELESS));
-        http
-                .exceptionHandling(exception ->
-                 exception.authenticationEntryPoint(jwtAuthEntryPoint));
-        http
-                .addFilterBefore(jwtAuthFilter, 
-                UsernamePasswordAuthenticationFilter.class);
+        http.csrf(AbstractHttpConfigurer::disable);
+        
+        http.cors(cors -> cors.configurationSource(request -> {
+            CorsConfiguration config = new CorsConfiguration();
+            config.setAllowedOrigins(Arrays.asList(
+                "http://localhost:8080",
+                "http://localhost:5500", 
+                "http://127.0.0.1:8080"
+            ));
+            config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+            config.setAllowedHeaders(Arrays.asList("*"));
+            config.setAllowCredentials(true);
+            return config;
+        }));
+        
+        http.authorizeHttpRequests(authz -> authz
+            // Разрешаем ВСЕ статические ресурсы и HTML
+            .requestMatchers(
+                "/",
+                "/index.html",
+                "/login.html",
+                "/app.js",
+                "/styles.css",
+                "/mock-api.js",
+                "/favicon.ico",
+                "/api/passengers/**",
+                "/img/**",
+                "/css/**",
+                "/js/**",
+                "/*.html",
+                "/*.js",
+                "/*.css",
+                "/*.png",
+                "/*.jpg"
+            ).permitAll()
+            
+            // Разрешаем аутентификацию
+            .requestMatchers("/api/auth/**").permitAll()
+            
+            // Разрешаем Swagger
+            .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+            
+            // Разрешаем Telegram эндпоинты
+            .requestMatchers("/api/telegram/**").permitAll()
+            
+            // Разрешаем setup endpoint
+            .requestMatchers("/api/setup/**").permitAll()
+            
+            // ВСЕ остальное требует аутентификации
+            .anyRequest().authenticated()
+        );
+        
+        http.sessionManagement(session -> 
+            session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+        
+        http.exceptionHandling(exception ->
+            exception.authenticationEntryPoint(jwtAuthEntryPoint));
+        
+        http.addFilterBefore(jwtAuthFilter, 
+            UsernamePasswordAuthenticationFilter.class);
+        
         return http.build();
     }
 

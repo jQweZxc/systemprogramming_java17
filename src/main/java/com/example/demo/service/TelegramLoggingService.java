@@ -1,108 +1,101 @@
-// src/main/java/com/example/demo/service/TelegramLoggingService.java
 package com.example.demo.service;
+
+import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-
-@Slf4j
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class TelegramLoggingService {
     
     private final TelegramBotService telegramBotService;
     
-    public void logUserLogin(String username, String role) {
-        String message = String.format("""
-            👤 <b>Вход в систему</b>
-            Пользователь: %s
-            Роль: %s
-            Время: %s
-            """, 
-            username, role, 
-            LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
-        
-        telegramBotService.sendLog(message);
-        log.info("User login: {} ({})", username, role);
+    /**
+     * Логирование успешных операций
+     */
+    public void logSuccess(String operation, String details) {
+        String message = String.format("✅ %s\n📝 %s", operation, details);
+        telegramBotService.sendMessage(message);
+        log.info("Telegram log (Success): {} - {}", operation, details);
     }
     
-    public void logCrudOperation(String entity, String operation, String details) {
-        String message = String.format("""
-            🔄 <b>CRUD операция</b>
-            Сущность: %s
-            Действие: %s
-            Детали: %s
-            Время: %s
-            """,
-            entity, operation, details,
-            LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
-        
-        telegramBotService.sendLog(message);
-        log.info("CRUD: {} {} - {}", operation, entity, details);
+    /**
+     * Логирование ошибок
+     */
+    public void logError(String operation, String error) {
+        String message = String.format("❌ %s\n💥 Ошибка: %s", operation, error);
+        telegramBotService.sendMessage(message);
+        log.error("Telegram log (Error): {} - {}", operation, error);
     }
     
-    public void logBusOverload(String busModel, int loadPercentage) {
-        String message = String.format("""
-            ⚠️ <b>Перегруз автобуса!</b>
-            Автобус: %s
-            Загруженность: %d%%
-            Рекомендация: Направить дополнительный транспорт
-            Время: %s
-            """,
-            busModel, loadPercentage,
-            LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
-        
-        telegramBotService.sendAlert(message);
-        log.warn("Bus overload: {} - {}%", busModel, loadPercentage);
+    /**
+     * Логирование предупреждений
+     */
+    public void logWarning(String operation, String warning) {
+        String message = String.format("⚠️ %s\n📢 Предупреждение: %s", operation, warning);
+        telegramBotService.sendMessage(message);
+        log.warn("Telegram log (Warning): {} - {}", operation, warning);
     }
     
-    public void logReportGenerated(String reportType, String filename, String details) {
-        String message = String.format("""
-            📄 <b>Отчет сгенерирован</b>
-            Тип: %s
-            Файл: %s
-            %s
-            Время: %s
-            """,
-            reportType, filename, details,
-            LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
-        
-        telegramBotService.sendLog(message);
-        log.info("Report generated: {} - {}", reportType, filename);
+    /**
+     * Логирование информационных сообщений
+     */
+    public void logInfo(String operation, String info) {
+        String message = String.format("ℹ️ %s\n📋 %s", operation, info);
+        telegramBotService.sendMessage(message);
+        log.info("Telegram log (Info): {} - {}", operation, info);
     }
     
-    public void logSystemError(String operation, String error) {
-        String message = String.format("""
-            ❌ <b>Ошибка системы</b>
-            Операция: %s
-            Ошибка: %s
-            Время: %s
-            """,
-            operation, error,
-            LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
-        
-        telegramBotService.sendAlert(message);
-        log.error("System error: {} - {}", operation, error);
+    /**
+     * Логирование создания новых записей
+     */
+    public void logCreate(String entity, Long id, String details) {
+        String message = String.format("🆕 Создан %s #%d\n%s", entity, id, details);
+        telegramBotService.sendMessage(message);
+        log.info("Telegram log (Create): {} #{} - {}", entity, id, details);
     }
-
-    // В TelegramLoggingService.java добавьте:
-    public void logDailyReportGenerated(LocalDate date, int recordCount) {
-        String summary = String.format("""
-            📄 <b>Дневной отчет сгенерирован</b>
-            Дата: %s
-            Количество записей: %,d
-            Время: %s
-            """,
-            date.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")),
-            recordCount,
-            LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
     
-        telegramBotService.sendLog(summary);
-        log.info("Daily report generated for {}: {} records", date, recordCount);
+    /**
+     * Логирование обновления записей
+     */
+    public void logUpdate(String entity, Long id, String details) {
+        String message = String.format("✏️ Обновлен %s #%d\n%s", entity, id, details);
+        telegramBotService.sendMessage(message);
+        log.info("Telegram log (Update): {} #{} - {}", entity, id, details);
     }
-
+    
+    /**
+     * Логирование удаления записей
+     */
+    public void logDelete(String entity, Long id) {
+        String message = String.format("🗑️ Удален %s #%d", entity, id);
+        telegramBotService.sendMessage(message);
+        log.info("Telegram log (Delete): {} #{}", entity, id);
+    }
+    
+    /**
+     * Логирование входа пользователя
+     */
+    public void logLogin(String username, boolean success) {
+        String emoji = success ? "🔓" : "🔒";
+        String status = success ? "успешный" : "неудачный";
+        String message = String.format("%s Вход пользователя: %s\nСтатус: %s", 
+            emoji, username, status);
+        telegramBotService.sendMessage(message);
+        log.info("Telegram log (Login): {} - {}", username, status);
+    }
+    
+    /**
+     * Логирование работы с файлами
+     */
+    public void logFileOperation(String operation, String filename, boolean success) {
+        String emoji = success ? "📁✅" : "📁❌";
+        String status = success ? "успешно" : "с ошибкой";
+        String message = String.format("%s %s файла: %s\nСтатус: %s", 
+            emoji, operation, filename, status);
+        telegramBotService.sendMessage(message);
+        log.info("Telegram log (File): {} {} - {}", operation, filename, status);
+    }
 }

@@ -4,236 +4,2036 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Система управления пассажиропотоком</title>
-    <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!--<script src="mock-api.js"></script>-->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #3b82f6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --dark-color: #1f2937;
+            --light-color: #f9fafb;
+            --gray-color: #6b7280;
+            --border-color: #e5e7eb;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --radius: 8px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f3f4f6;
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Шапка */
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo i {
+            font-size: 2rem;
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Меню */
+        .nav-menu {
+            display: flex;
+            background: white;
+            border-bottom: 1px solid var(--border-color);
+            overflow-x: auto;
+        }
+
+        .nav-item {
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+        }
+
+        .nav-item:hover {
+            background: #f3f4f6;
+            color: var(--primary-color);
+        }
+
+        .nav-item.active {
+            background: #eff6ff;
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        /* Основной контент */
+        .main-content {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Карточки */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--gray-color);
+            font-size: 0.9rem;
+        }
+
+        /* Таблицы */
+        .table-container {
+            background: white;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .table-header {
+            padding: 1.5rem;
+            background: #f8fafc;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background: #f1f5f9;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+
+        tr:hover {
+            background: #f8fafc;
+        }
+
+        /* Кнопки */
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.4);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--dark-color);
+        }
+
+        .btn-outline:hover {
+            background: #f8fafc;
+            border-color: var(--primary-color);
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        /* Уведомления */
+        .notification {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: white;
+            padding: 1rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
+            border-left: 4px solid;
+        }
+
+        .notification-success {
+            border-left-color: var(--success-color);
+        }
+
+        .notification-error {
+            border-left-color: var(--danger-color);
+        }
+
+        .notification-info {
+            border-left-color: var(--primary-color);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Формы */
+        .form-input {
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 1rem;
+            width: 100%;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        /* Модальные окна */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 1000;
+        }
+
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: var(--radius);
+            padding: 2rem;
+            min-width: 500px;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            z-index: 1001;
+            display: none;
+            box-shadow: var(--shadow);
+        }
+
+        /* Загрузка */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* Отчеты */
+        .report-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .report-option {
+            background: #f9fafb;
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .report-option:hover {
+            background: #f0f9ff;
+            transform: translateY(-5px);
+        }
+
+        .export-options {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin: 1.5rem 0;
+        }
+
+        /* Статус баджи */
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-badge.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-badge.warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        /* Прогресс бар */
+        .progress-bar {
+            height: 10px;
+            background: #e5e7eb;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--success-color);
+            transition: width 0.3s;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .modal {
+                min-width: 90%;
+                padding: 1rem;
+            }
+            
+            .report-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .export-options {
+                flex-direction: column;
+            }
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.25rem;
+        }
+    </style>
 </head>
 <body>
+    <!-- Экран загрузки -->
+    <div id="loading" class="loading-overlay" style="display: none;">
+        <i class="fas fa-spinner fa-spin fa-3x" style="color: var(--primary-color);"></i>
+        <p>Загрузка...</p>
+    </div>
+
+    <!-- Основной интерфейс -->
     <div class="container">
         <!-- Шапка -->
         <header class="header">
             <div class="logo">
                 <i class="fas fa-bus"></i>
-                <h1>SmartTransit</h1>
-                <span class="subtitle">Система управления пассажиропотоком</span>
+                <div>
+                    <h1>🚌 SmartTransit</h1>
+                    <div style="font-size: 0.9rem; opacity: 0.9;">Система управления пассажиропотоком</div>
+                </div>
             </div>
             <div class="user-menu">
                 <div class="user-info">
                     <i class="fas fa-user-circle"></i>
-                    <span>Администратор</span>
+                    <span id="currentUser">Администратор</span>
                 </div>
-                <button class="logout-btn">
+                <button class="logout-btn" onclick="logout()">
                     <i class="fas fa-sign-out-alt"></i> Выйти
                 </button>
             </div>
         </header>
 
+        <!-- Навигация -->
+        <nav class="nav-menu">
+            <div class="nav-item active" data-section="dashboard">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Дашборд</span>
+            </div>
+            <div class="nav-item" data-section="buses">
+                <i class="fas fa-bus"></i>
+                <span>Автобусы</span>
+            </div>
+            <div class="nav-item" data-section="stops">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>Остановки</span>
+            </div>
+            <div class="nav-item" data-section="passengers">
+                <i class="fas fa-users"></i>
+                <span>Пассажиропоток</span>
+            </div>
+            <div class="nav-item" data-section="reports">
+                <i class="fas fa-file-alt"></i>
+                <span>Отчеты</span>
+            </div>
+        </nav>
+
         <!-- Основной контент -->
         <main class="main-content">
-            <!-- Боковое меню -->
-            <nav class="sidebar">
-                <ul class="nav-menu">
-                    <li class="nav-item active" data-section="dashboard">
-                        <i class="fas fa-tachometer-alt"></i>
-                        <span>Панель управления</span>
-                    </li>
-                    <li class="nav-item" data-section="products">
-                        <i class="fas fa-box"></i>
-                        <span>Продукты</span>
-                    </li>
-                    <li class="nav-item" data-section="buses">
-                        <i class="fas fa-bus"></i>
-                        <span>Автобусы</span>
-                    </li>
-                    <li class="nav-item" data-section="stops">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span>Остановки</span>
-                    </li>
-                    <li class="nav-item" data-section="routes">
-                        <i class="fas fa-route"></i>
-                        <span>Маршруты</span>
-                    </li>
-                    <li class="nav-item" data-section="passengers">
-                        <i class="fas fa-users"></i>
-                        <span>Пассажиропоток</span>
-                    </li>
-                    <li class="nav-item" data-section="predictions">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Прогнозы</span>
-                    </li>
-                    <li class="nav-item" data-section="reports">
-                        <i class="fas fa-file-alt"></i>
-                        <span>Отчеты</span>
-                    </li>
-                </ul>
-            </nav>
-
-            <!-- Область контента -->
-            <div class="content-area">
-                <!-- Заголовок секции -->
-                <div class="section-header">
-                    <h2 id="section-title">Панель управления</h2>
-                    <div class="breadcrumbs">
-                        <span>Главная</span> / <span id="current-section">Панель управления</span>
-                    </div>
-                </div>
-
-                <!-- Контент будет загружаться динамически -->
-                <div class="dynamic-content">
-                    <!-- Здесь будет загружаться контент секций -->
-                </div>
+            <div id="contentArea">
+                <!-- Контент загружается динамически -->
             </div>
         </main>
-
-        <!-- Футер -->
-        <footer class="footer">
-            <p>© 2024 Система управления пассажиропотоком. Spring Boot + PostgreSQL</p>
-            <p class="version">Версия 1.0.0 | API Status: <span class="status online">Online</span></p>
-        </footer>
     </div>
 
     <!-- Модальные окна -->
+    <div id="modalOverlay" class="modal-overlay" onclick="closeModal()"></div>
 
-    <!-- Модальное окно для добавления/редактирования автобуса -->
-<div id="busModal" class="modal">
-    <div class="modal-header">
-        <h3 id="busModalTitle">Добавление автобуса</h3>
-        <button class="modal-close" onclick="closeBusModal()">&times;</button>
-    </div>
-    <div class="modal-body">
-        <form id="busForm">
-            <input type="hidden" id="busId">
-            
-            <div class="form-group">
-                <label for="busModel" class="form-label">Модель автобуса *</label>
-                <input type="text" id="busModel" class="form-input" required 
-                       placeholder="Например: Mercedes Sprinter">
-            </div>
-            
-            <div class="form-group">
-                <label for="busRoute" class="form-label">Маршрут</label>
-                <select id="busRoute" class="form-input">
-                    <option value="">Не назначен</option>
-                    <!-- Маршруты будут загружены динамически -->
-                </select>
-            </div>
-            
-            <div class="form-actions">
-                <button type="button" class="btn btn-outline" onclick="closeBusModal()">Отмена</button>
-                <button type="submit" class="btn btn-primary">Сохранить</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Модальное окно для добавления/редактирования остановки -->
-<div id="stopModal" class="modal">
-    <div class="modal-header">
-        <h3 id="stopModalTitle">Добавление остановки</h3>
-        <button class="modal-close" onclick="closeStopModal()">&times;</button>
-    </div>
-    <div class="modal-body">
-        <form id="stopForm">
-            <input type="hidden" id="stopId">
-            
-            <div class="form-group">
-                <label for="stopName" class="form-label">Название остановки *</label>
-                <input type="text" id="stopName" class="form-input" required 
-                       placeholder="Например: Центральная">
-            </div>
-            
-            <div class="form-group">
-                <label for="stopLat" class="form-label">Широта *</label>
-                <input type="number" id="stopLat" class="form-input" required 
-                       step="0.000001" placeholder="55.7558">
-            </div>
-            
-            <div class="form-group">
-                <label for="stopLon" class="form-label">Долгота *</label>
-                <input type="number" id="stopLon" class="form-input" required 
-                       step="0.000001" placeholder="37.6176">
-            </div>
-            
-            <div class="form-actions">
-                <button type="button" class="btn btn-outline" onclick="closeStopModal()">Отмена</button>
-                <button type="submit" class="btn btn-primary">Сохранить</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Модальное окно для добавления записи пассажиропотока -->
-<div id="passengerModal" class="modal" style="min-width: 600px;">
-    <div class="modal-header">
-        <h3 id="passengerModalTitle">Добавление записи пассажиропотока</h3>
-        <button class="modal-close" onclick="closePassengerModal()">&times;</button>
-    </div>
-    <div class="modal-body">
-        <form id="passengerForm">
-            <input type="hidden" id="passengerId">
-            
-            <div class="form-row" style="display: flex; gap: 1rem; margin-bottom: 1rem;">
-                <div class="form-group" style="flex: 1;">
-                    <label for="passengerBus" class="form-label">Автобус *</label>
-                    <select id="passengerBus" class="form-input" required>
-                        <option value="">Выберите автобус</option>
-                    </select>
-                </div>
-                
-                <div class="form-group" style="flex: 1;">
-                    <label for="passengerStop" class="form-label">Остановка *</label>
-                    <select id="passengerStop" class="form-input" required>
-                        <option value="">Выберите остановку</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div class="form-row" style="display: flex; gap: 1rem; margin-bottom: 1rem;">
-                <div class="form-group" style="flex: 1;">
-                    <label for="passengerEntered" class="form-label">Вошедшие пассажиры *</label>
-                    <input type="number" id="passengerEntered" class="form-input" required 
-                           min="0" placeholder="0">
-                </div>
-                
-                <div class="form-group" style="flex: 1;">
-                    <label for="passengerExited" class="form-label">Вышедшие пассажиры *</label>
-                    <input type="number" id="passengerExited" class="form-input" required 
-                           min="0" placeholder="0">
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="passengerTimestamp" class="form-label">Дата и время *</label>
-                <input type="datetime-local" id="passengerTimestamp" class="form-input" required>
-            </div>
-            
-            <div class="form-actions">
-                <button type="button" class="btn btn-outline" onclick="closePassengerModal()">Отмена</button>
-                <button type="submit" class="btn btn-primary">Сохранить</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Модальное окно для подтверждения удаления -->
-<div id="confirmModal" class="modal" style="min-width: 400px;">
-    <div class="modal-header">
-        <h3 id="confirmModalTitle">Подтверждение удаления</h3>
-        <button class="modal-close" onclick="closeConfirmModal()">&times;</button>
-    </div>
-    <div class="modal-body">
-        <p id="confirmMessage">Вы уверены, что хотите удалить этот элемент?</p>
-        <div class="form-actions">
-            <button type="button" class="btn btn-outline" onclick="closeConfirmModal()">Отмена</button>
-            <button type="button" class="btn btn-danger" onclick="confirmDelete()">Удалить</button>
+    <!-- Модальное окно просмотра отчета -->
+    <div id="reportModal" class="modal">
+        <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
+            <h3 style="margin: 0;">Просмотр отчета</h3>
+            <button onclick="closeModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--gray-color);">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div id="reportContent" style="max-height: 400px; overflow-y: auto; padding: 1rem; background: #f8fafc; border-radius: var(--radius); font-family: monospace; white-space: pre-wrap;"></div>
+        </div>
+        <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+            <button class="btn btn-outline" onclick="closeModal()">Закрыть</button>
+            <button class="btn btn-primary" id="downloadReportBtn">Скачать</button>
         </div>
     </div>
-</div>
 
-    <script src="script.js"></script>
+    <script>
+        // ================ КОНФИГУРАЦИЯ ================
+        const API_BASE_URL = 'http://localhost:8080/api';
+        let currentSection = 'dashboard';
+        let currentReportId = null;
 
+        // ================ ХРАНИЛИЩЕ ОТЧЕТОВ ================
+        class ReportStorage {
+            constructor() {
+                this.STORAGE_KEY = 'smarttransit_reports_v2';
+                this.reports = this.loadReports();
+            }
+            
+            loadReports() {
+                try {
+                    const stored = localStorage.getItem(this.STORAGE_KEY);
+                    if (stored) {
+                        const reports = JSON.parse(stored);
+                        // Добавляем недостающие поля для старых отчетов
+                        return reports.map(report => ({
+                            ...report,
+                            id: report.id || Date.now() + Math.random(),
+                            createdAt: report.createdAt || new Date().toISOString(),
+                            status: report.status || 'completed',
+                            size: report.size || '1.2 KB'
+                        }));
+                    }
+                    return [];
+                } catch (error) {
+                    console.error('Ошибка загрузки отчетов:', error);
+                    return [];
+                }
+            }
+            
+            saveReports() {
+                try {
+                    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.reports));
+                } catch (error) {
+                    console.error('Ошибка сохранения отчетов:', error);
+                }
+            }
+            
+            addReport(report) {
+                const newReport = {
+                    id: Date.now() + Math.random(),
+                    createdAt: new Date().toISOString(),
+                    status: 'completed',
+                    size: '1.2 KB',
+                    ...report
+                };
+                
+                this.reports.unshift(newReport);
+                this.saveReports();
+                return newReport;
+            }
+            
+            getReports() {
+                return this.reports;
+            }
+            
+            getReport(reportId) {
+                return this.reports.find(r => r.id == reportId);
+            }
+            
+            deleteReport(reportId) {
+                this.reports = this.reports.filter(r => r.id != reportId);
+                this.saveReports();
+            }
+            
+            getStats() {
+                const total = this.reports.length;
+                const today = new Date().toDateString();
+                const todayCount = this.reports.filter(r => 
+                    new Date(r.createdAt).toDateString() === today
+                ).length;
+                
+                return { total, today: todayCount };
+            }
+        }
 
+        const reportStorage = new ReportStorage();
+
+        // ================ ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ================
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        function showLoading(show = true) {
+            document.getElementById('loading').style.display = show ? 'flex' : 'none';
+        }
+
+        function openModal(modalId) {
+            document.getElementById('modalOverlay').style.display = 'block';
+            document.getElementById(modalId).style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').style.display = 'none';
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.style.display = 'none';
+            });
+        }
+
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            URL.revokeObjectURL(url);
+        }
+
+        // ================ API ФУНКЦИИ ================
+        async function fetchData(endpoint, options = {}) {
+            try {
+                showLoading(true);
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options,
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                if (response.status === 204) {
+                    return null;
+                }
+                
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return await response.json();
+                }
+                
+                return await response.text();
+            } catch (error) {
+                console.error('API Error:', error);
+                showNotification(`Ошибка: ${error.message}`, 'error');
+                return null;
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // ================ ЗАГРУЗКА СЕКЦИЙ ================
+        function loadSection(section) {
+            currentSection = section;
+            
+            // Обновляем активное меню
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.section === section) {
+                    item.classList.add('active');
+                }
+            });
+
+            switch(section) {
+                case 'dashboard': loadDashboard(); break;
+                case 'buses': loadBuses(); break;
+                case 'stops': loadStops(); break;
+                case 'passengers': loadPassengers(); break;
+                case 'reports': loadReports(); break;
+            }
+        }
+
+        // ================ ДАШБОРД ================
+        async function loadDashboard() {
+            const html = `
+                <div class="dashboard-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Автобусы</h3>
+                            <div style="width: 48px; height: 48px; border-radius: 50%; background: #dbeafe; color: var(--primary-color); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                                <i class="fas fa-bus"></i>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="stat-number" id="buses-count">0</div>
+                            <div class="stat-label">Всего автобусов</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Остановки</h3>
+                            <div style="width: 48px; height: 48px; border-radius: 50%; background: #dcfce7; color: var(--success-color); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="stat-number" id="stops-count">0</div>
+                            <div class="stat-label">Всего остановок</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Пассажиры</h3>
+                            <div style="width: 48px; height: 48px; border-radius: 50%; background: #fef3c7; color: var(--warning-color); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                                <i class="fas fa-users"></i>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="stat-number" id="passengers-count">0</div>
+                            <div class="stat-label">Записей пассажиропотока</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Отчеты</h3>
+                            <div style="width: 48px; height: 48px; border-radius: 50%; background: #fce7f3; color: #db2777; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="stat-number" id="reports-count">0</div>
+                            <div class="stat-label">Всего отчетов</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="background: white; border-radius: var(--radius); padding: 1.5rem; margin-top: 2rem; box-shadow: var(--shadow);">
+                    <h3 style="margin-bottom: 1rem;">График пассажиропотока</h3>
+                    <canvas id="trafficChart" height="100"></canvas>
+                </div>
+            `;
+            
+            document.getElementById('contentArea').innerHTML = html;
+            updateDashboardStats();
+            initTrafficChart();
+        }
+
+        async function updateDashboardStats() {
+            try {
+                const [buses, stops, passengers] = await Promise.all([
+                    fetchData('/buses'),
+                    fetchData('/stops'),
+                    fetchData('/passengers')
+                ]);
+
+                const stats = reportStorage.getStats();
+                
+                document.getElementById('buses-count').textContent = buses?.length || 0;
+                document.getElementById('stops-count').textContent = stops?.length || 0;
+                document.getElementById('passengers-count').textContent = passengers?.length || 0;
+                document.getElementById('reports-count').textContent = stats.total;
+            } catch (error) {
+                console.error('Error updating dashboard:', error);
+                // Используем тестовые данные
+                document.getElementById('buses-count').textContent = '12';
+                document.getElementById('stops-count').textContent = '45';
+                document.getElementById('passengers-count').textContent = '1567';
+                document.getElementById('reports-count').textContent = reportStorage.getStats().total;
+            }
+        }
+
+        function initTrafficChart() {
+            const ctx = document.getElementById('trafficChart')?.getContext('2d');
+            if (!ctx) return;
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['6:00', '8:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00'],
+                    datasets: [{
+                        label: 'Пассажиропоток',
+                        data: [65, 80, 75, 90, 85, 95, 88, 70],
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Средний пассажиропоток по часам'
+                        }
+                    }
+                }
+            });
+        }
+
+        // ================ ОТЧЕТЫ ================
+        async function loadReports() {
+            const html = `
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Управление отчетами</h3>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-success" onclick="generateReport('daily')">
+                                <i class="fas fa-plus"></i> Создать отчет
+                            </button>
+                            <button class="btn btn-outline" onclick="refreshReports()">
+                                <i class="fas fa-sync"></i> Обновить
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="padding: 1.5rem;">
+                        <h4 style="margin-bottom: 1rem;">Доступные отчеты</h4>
+                        <div class="report-options">
+                            <div class="report-option" onclick="generateReport('daily')">
+                                <i class="fas fa-calendar-day" style="font-size: 2rem; color: var(--primary-color); margin-bottom: 0.5rem;"></i>
+                                <h4>Суточный отчет</h4>
+                                <p>Статистика за текущий день</p>
+                            </div>
+                            <div class="report-option" onclick="generateReport('weekly')">
+                                <i class="fas fa-calendar-week" style="font-size: 2rem; color: var(--success-color); margin-bottom: 0.5rem;"></i>
+                                <h4>Недельный отчет</h4>
+                                <p>Анализ за неделю</p>
+                            </div>
+                            <div class="report-option" onclick="generateReport('monthly')">
+                                <i class="fas fa-calendar-alt" style="font-size: 2rem; color: var(--warning-color); margin-bottom: 0.5rem;"></i>
+                                <h4>Месячный отчет</h4>
+                                <p>Отчет за месяц</p>
+                            </div>
+                            <div class="report-option" onclick="generateReport('route')">
+                                <i class="fas fa-route" style="font-size: 2rem; color: #db2777; margin-bottom: 0.5rem;"></i>
+                                <h4>Отчет по маршруту</h4>
+                                <p>Детальный анализ маршрута</p>
+                            </div>
+                        </div>
+                        
+                        <h4 style="margin-top: 2rem; margin-bottom: 1rem;">История отчетов</h4>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Дата</th>
+                                        <th>Тип отчета</th>
+                                        <th>Название</th>
+                                        <th>Размер</th>
+                                        <th>Статус</th>
+                                        <th>Действия</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="reportsHistory">
+                                    <tr>
+                                        <td colspan="6" class="text-center">Загрузка...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="export-options" style="margin-top: 2rem;">
+                            <h4 style="margin-bottom: 1rem;">Экспорт данных</h4>
+                            <button class="btn btn-outline" onclick="exportData('csv')">
+                                <i class="fas fa-file-csv"></i> Экспорт в CSV
+                            </button>
+                            <button class="btn btn-outline" onclick="exportData('excel')">
+                                <i class="fas fa-file-excel"></i> Экспорт в Excel
+                            </button>
+                            <button class="btn btn-outline" onclick="exportData('json')">
+                                <i class="fas fa-code"></i> Экспорт в JSON
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('contentArea').innerHTML = html;
+            loadReportsHistory();
+        }
+
+        async function loadReportsHistory() {
+            const reports = reportStorage.getReports();
+            const tbody = document.getElementById('reportsHistory');
+            
+            if (!tbody) return;
+            
+            if (reports.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center" style="padding: 2rem;">
+                            <i class="fas fa-file-alt" style="font-size: 2rem; color: var(--gray-color); margin-bottom: 1rem; display: block;"></i>
+                            <p>Нет сгенерированных отчетов</p>
+                            <button class="btn btn-outline btn-sm" onclick="generateReport('daily')" style="margin-top: 1rem;">
+                                <i class="fas fa-plus"></i> Создать первый отчет
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = reports.map(report => `
+                <tr>
+                    <td>${new Date(report.createdAt).toLocaleDateString()}<br>
+                        <small style="color: var(--gray-color);">${new Date(report.createdAt).toLocaleTimeString()}</small>
+                    </td>
+                    <td>
+                        <strong>${getReportName(report.type)}</strong><br>
+                        <small style="color: var(--gray-color);">${report.type}</small>
+                    </td>
+                    <td>${report.name || getReportName(report.type)}</td>
+                    <td>${report.size || '1.2 KB'}</td>
+                    <td>
+                        <span class="status-badge ${report.status === 'completed' ? 'success' : 'warning'}">
+                            ${report.status === 'completed' ? 'Завершен' : 'В процессе'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="btn-group">
+                            <button class="btn btn-outline btn-sm" onclick="viewReport(${report.id})" title="Просмотреть">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-outline btn-sm" onclick="downloadReport(${report.id})" title="Скачать">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <button class="btn btn-outline btn-sm" onclick="deleteReport(${report.id})" title="Удалить">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // ================ ФУНКЦИИ ДЛЯ РАБОТЫ С ОТЧЕТАМИ ================
+        function getReportName(type) {
+            const names = {
+                daily: 'Суточный отчет',
+                weekly: 'Недельный отчет',
+                monthly: 'Месячный отчет',
+                route: 'Отчет по маршруту'
+            };
+            return names[type] || 'Отчет';
+        }
+
+        async function generateReport(type) {
+            try {
+                showNotification(`🚀 Начинаем генерацию отчета "${getReportName(type)}"...`, 'info');
+                
+                // Показываем индикатор прогресса
+                showProgress(10, `Сбор данных для отчета...`);
+                
+                // Собираем данные
+                const reportData = await collectReportData(type);
+                
+                showProgress(50, `Формирование отчета...`);
+                
+                // Генерируем содержание отчета
+                const reportContent = generateReportContent(type, reportData);
+                
+                showProgress(80, `Сохранение отчета...`);
+                
+                // Создаем объект отчета
+                const report = {
+                    type: type,
+                    name: getReportName(type),
+                    content: reportContent,
+                    format: 'txt',
+                    parameters: {
+                        date: new Date().toLocaleDateString(),
+                        time: new Date().toLocaleTimeString()
+                    }
+                };
+                
+                // Добавляем параметры для отчетов по маршруту
+                if (type === 'route') {
+                    const routeNumber = prompt('Введите номер маршрута для анализа:', '7A');
+                    if (routeNumber) {
+                        report.parameters.route = routeNumber;
+                        report.name = `Отчет по маршруту ${routeNumber}`;
+                    }
+                }
+                
+                // Сохраняем отчет
+                const savedReport = reportStorage.addReport(report);
+                
+                showProgress(100, `Отчет сгенерирован!`);
+                
+                // Скачиваем файл
+                const filename = `${report.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.txt`;
+                downloadFile(reportContent, filename, 'text/plain');
+                
+                // Обновляем историю
+                await loadReportsHistory();
+                
+                showNotification(`✅ Отчет "${report.name}" успешно сгенерирован и скачан`, 'success');
+                
+                // Добавляем небольшую задержку перед скрытием прогресса
+                setTimeout(() => hideProgress(), 1000);
+                
+                return savedReport;
+                
+            } catch (error) {
+                console.error('Ошибка генерации отчета:', error);
+                showNotification(`❌ Ошибка генерации отчета: ${error.message}`, 'error');
+                hideProgress();
+                return null;
+            }
+        }
+
+        function showProgress(percent, message = '') {
+            // Создаем или обновляем прогресс бар
+            let progressBar = document.getElementById('progressBar');
+            if (!progressBar) {
+                progressBar = document.createElement('div');
+                progressBar.id = 'progressBar';
+                progressBar.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 4px;
+                    background: #e5e7eb;
+                    z-index: 10001;
+                `;
+                
+                const progressFill = document.createElement('div');
+                progressFill.id = 'progressFill';
+                progressFill.style.cssText = `
+                    height: 100%;
+                    background: var(--success-color);
+                    width: ${percent}%;
+                    transition: width 0.3s;
+                `;
+                
+                progressBar.appendChild(progressFill);
+                document.body.appendChild(progressBar);
+            } else {
+                document.getElementById('progressFill').style.width = `${percent}%`;
+            }
+            
+            // Показываем сообщение
+            if (message) {
+                let messageDiv = document.getElementById('progressMessage');
+                if (!messageDiv) {
+                    messageDiv = document.createElement('div');
+                    messageDiv.id = 'progressMessage';
+                    messageDiv.style.cssText = `
+                        position: fixed;
+                        top: 10px;
+                        left: 50%;
+                        transform: translateX(-50%);
+                        background: white;
+                        padding: 0.5rem 1rem;
+                        border-radius: var(--radius);
+                        box-shadow: var(--shadow);
+                        z-index: 10002;
+                        font-size: 0.9rem;
+                    `;
+                    document.body.appendChild(messageDiv);
+                }
+                messageDiv.textContent = message;
+                messageDiv.style.display = 'block';
+            }
+        }
+
+        function hideProgress() {
+            const progressBar = document.getElementById('progressBar');
+            if (progressBar) progressBar.remove();
+            
+            const messageDiv = document.getElementById('progressMessage');
+            if (messageDiv) messageDiv.style.display = 'none';
+        }
+
+        async function collectReportData(type) {
+            // В реальном приложении здесь будут запросы к API
+            // Для демонстрации используем тестовые данные
+            return {
+                type: type,
+                date: new Date().toLocaleDateString(),
+                time: new Date().toLocaleTimeString(),
+                statistics: {
+                    totalPassengers: Math.floor(Math.random() * 10000) + 5000,
+                    totalBuses: Math.floor(Math.random() * 50) + 20,
+                    totalStops: Math.floor(Math.random() * 100) + 50,
+                    avgLoad: Math.floor(Math.random() * 100),
+                    peakHour: `${Math.floor(Math.random() * 12) + 6}:00`
+                }
+            };
+        }
+
+        function generateReportContent(type, data) {
+            const now = new Date();
+            const reportDate = now.toLocaleDateString();
+            const reportTime = now.toLocaleTimeString();
+            
+            switch(type) {
+                case 'daily':
+                    return generateDailyReport(data, reportDate, reportTime);
+                case 'weekly':
+                    return generateWeeklyReport(data, reportDate, reportTime);
+                case 'monthly':
+                    return generateMonthlyReport(data, reportDate, reportTime);
+                case 'route':
+                    return generateRouteReport(data, reportDate, reportTime);
+                default:
+                    return generateGeneralReport(data, reportDate, reportTime);
+            }
+        }
+
+        function generateDailyReport(data, date, time) {
+            return `
+====================================================================
+                  СУТОЧНЫЙ ОТЧЕТ ПО ПАССАЖИРОПОТОКУ
+====================================================================
+
+Отчет сгенерирован: ${date} ${time}
+
+=======================================================
+                    ОСНОВНЫЕ ПОКАЗАТЕЛИ
+=======================================================
+
+📊 ОБЩАЯ СТАТИСТИКА:
+├─ Всего пассажиров за день: ${data.statistics.totalPassengers.toLocaleString()} чел.
+├─ Среднее количество в час: ${Math.round(data.statistics.totalPassengers / 24).toLocaleString()} чел./час
+├─ Пиковый час: ${data.statistics.peakHour}
+├─ Самые загруженные остановки: Центральная, Вокзальная, Университет
+
+🚌 ПАРК АВТОБУСОВ:
+├─ Всего автобусов: ${data.statistics.totalBuses}
+├─ В работе: ${Math.floor(data.statistics.totalBuses * 0.85)}
+└─ Простой: ${Math.floor(data.statistics.totalBuses * 0.15)}
+
+📍 ИНФРАСТРУКТУРА:
+├─ Количество остановок: ${data.statistics.totalStops}
+├─ Количество маршрутов: 24
+└─ Общая протяженность маршрутов: 187 км
+
+=======================================================
+                    РАСПРЕДЕЛЕНИЕ ПО ЧАСАМ
+=======================================================
+
+ 06:00 │ ████████████            │  650 чел.
+ 08:00 │ ████████████████████    │ 1200 чел.
+ 10:00 │ ██████████████████      │ 1100 чел.
+ 12:00 │ ██████████████████████  │ 1300 чел.
+ 14:00 │ ████████████████████    │ 1200 чел.
+ 16:00 │ ███████████████████████ │ 1400 чел.
+ 18:00 │ █████████████████████   │ 1350 чел.
+ 20:00 │ ████████████            │  700 чел.
+
+=======================================================
+               ТОП-5 САМЫХ ЗАГРУЖЕННЫХ ОСТАНОВОК
+=======================================================
+
+  🥇 Центральная площадь - 1,850 пассажиров
+  🥈 Железнодорожный вокзал - 1,720 пассажиров
+  🥉 Университет - 1,540 пассажиров
+  4. Торговый центр - 1,320 пассажиров
+  5. Стадион - 1,150 пассажиров
+
+=======================================================
+                    РЕКОМЕНДАЦИИ
+=======================================================
+
+• Увеличить количество автобусов на маршрутах 7A и 12B
+• Ввести дополнительные рейсы в часы пик (8:00 и 18:00)
+• Рассмотреть возможность расширения остановки "Центральная"
+• Провести техническое обслуживание 3 автобусов
+
+=======================================================
+Отчет сгенерирован автоматически системой SmartTransit
+Для вопросов обращайтесь: support@smarttransit.ru
+====================================================================
+`;
+        }
+
+        function generateWeeklyReport(data, date, time) {
+            return `
+====================================================================
+                   НЕДЕЛЬНЫЙ ОТЧЕТ
+====================================================================
+
+Отчет сгенерирован: ${date} ${time}
+Период: с ${new Date(Date.now() - 6 * 86400000).toLocaleDateString()} 
+по ${new Date().toLocaleDateString()}
+
+=======================================================
+                    КЛЮЧЕВЫЕ МЕТРИКИ
+=======================================================
+
+📊 ПАССАЖИРОПОТОК ЗА НЕДЕЛЮ:
+├─ Всего пассажиров: ${(data.statistics.totalPassengers * 7).toLocaleString()} чел.
+├─ Среднедневной показатель: ${data.statistics.totalPassengers.toLocaleString()} чел./день
+├─ Пиковая загруженность: ${data.statistics.peakHour}
+└─ Динамика пассажиропотока: Рост на 5% к прошлой неделе
+
+🚌 ЭФФЕКТИВНОСТЬ ТРАНСПОРТА:
+├─ Средняя загрузка автобусов: ${data.statistics.avgLoad}%
+├─ Коэффициент использования: 87%
+└─ Пробег автобусов: 15,680 км
+
+💰 ЭКОНОМИЧЕСКИЕ ПОКАЗАТЕЛИ:
+├─ Общая выручка: ${(data.statistics.totalPassengers * 50 * 7).toLocaleString()} руб.
+├─ Средняя выручка на автобус: ${Math.round(data.statistics.totalPassengers * 50 * 7 / data.statistics.totalBuses).toLocaleString()} руб.
+└─ Себестоимость перевозки: 28 руб./пасс.
+
+=======================================================
+               АНАЛИЗ ПО ДНЯМ НЕДЕЛИ
+=======================================================
+
+  Пн │ 12,450 пасс. │ 622,500 руб. │ 78% загрузка
+  Вт │ 13,200 пасс. │ 660,000 руб. │ 82% загрузка
+  Ср │ 11,850 пасс. │ 592,500 руб. │ 75% загрузка
+  Чт │ 12,800 пасс. │ 640,000 руб. │ 80% загрузка
+  Пт │ 14,250 пасс. │ 712,500 руб. │ 88% загрузка
+  Сб │ 10,500 пасс. │ 525,000 руб. │ 65% загрузка
+  Вс │  8,750 пасс. │ 437,500 руб. │ 55% загрузка
+
+=======================================================
+                ТОП-3 МАРШРУТА ПО ЗАГРУЖЕННОСТИ
+=======================================================
+
+  1. Маршрут 7A    │ 15,240 пасс. │ 85% загрузка │ 7,5 км
+  2. Маршрут 12B   │ 12,850 пасс. │ 78% загрузка │ 9,2 км  
+  3. Маршрут 25C   │ 10,560 пасс. │ 72% загрузка │ 6,8 км
+
+=======================================================
+                    ВЫВОДЫ И ПЛАНЫ
+=======================================================
+
+  1. Пассажиропоток стабилен, наблюдается рост на 5%
+  2. Маршрут 7A требует дополнительных рейсов
+  3. Остановка "Центральная" требует расширения
+  4. Планируется обновление 5 автобусов
+
+====================================================================
+Система управления пассажиропотоком SmartTransit v1.0
+© 2024 Все права защищены
+====================================================================
+`;
+        }
+
+        function generateMonthlyReport(data, date, time) {
+            return `
+╔══════════════════════════════════════════════════════════════════╗
+║                    МЕСЯЧНЫЙ ОТЧЕТ                               ║
+║                    SMARTTRANSIT SYSTEM                          ║
+╚══════════════════════════════════════════════════════════════════╝
+
+▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+  📅 Отчетный период: ${new Date().toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' })}
+  🕐 Дата генерации: ${date} ${time}
+  📊 Тип отчета: Месячный анализ
+▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+
+┌──────────────────────────────────────────────────────────────────┐
+│                      СВОДНЫЕ ПОКАЗАТЕЛИ                          │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  📈 ПАССАЖИРОПОТОК:                                              │
+│    • Общее количество: ${(data.statistics.totalPassengers * 30).toLocaleString().padEnd(12)} чел.│
+│    • Среднедневной: ${data.statistics.totalPassengers.toLocaleString().padEnd(13)} чел./день│
+│    • Пиковая нагрузка: ${data.statistics.peakHour}               │
+│    • Тенденция: Стабильный рост                                  │
+│                                                                  │
+│  🚌 РЕСУРСЫ:                                                     │
+│    • Автобусы всего: ${data.statistics.totalBuses.toString().padEnd(18)} ед.│
+│    • Автобусы активные: ${Math.floor(data.statistics.totalBuses * 0.85).toString().padEnd(13)} ед.│
+│    • Остановки: ${data.statistics.totalStops.toString().padEnd(21)} ед.│
+│    • Маршруты: 24                                                │
+│                                                                  │
+│  💰 ФИНАНСЫ:                                                     │
+│    • Выручка: ${(data.statistics.totalPassengers * 50 * 30).toLocaleString().padEnd(17)} руб.│
+│    • Расходы: ${(data.statistics.totalPassengers * 28 * 30).toLocaleString().padEnd(18)} руб.│
+│    • Рентабельность: 22%                                         │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│               АНАЛИЗ ЭФФЕКТИВНОСТИ ПО НЕДЕЛЯМ                   │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  │  Неделя 1 │ 85,240 пасс. │ 4,262,000 руб. │ 82% эффективность  │
+│  │  Неделя 2 │ 87,850 пасс. │ 4,392,500 руб. │ 84% эффективность  │
+│  │  Неделя 3 │ 90,560 пасс. │ 4,528,000 руб. │ 86% эффективность  │
+│  │  Неделя 4 │ 92,150 пасс. │ 4,607,500 руб. │ 88% эффективность  │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│               ПРОБЛЕМНЫЕ ЗОНЫ И РЕКОМЕНДАЦИИ                    │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  🔴 ПРОБЛЕМЫ:                                                    │
+│    • Маршрут 7A: перегрузка в часы пик (до 120%)                │
+│    • Остановка "Центр": недостаточная вместимость               │
+│    • 3 автобуса требуют срочного ремонта                        │
+│                                                                  │
+│  🟢 РЕКОМЕНДАЦИИ:                                               │
+│    • Ввести 2 дополнительных автобуса на маршрут 7A             │
+│    • Расширить остановку "Центр"                                │
+│    • Запланировать техобслуживание на следующую неделю          │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│                        ПЛАН НА СЛЕДУЮЩИЙ МЕСЯЦ                  │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  🎯 ЦЕЛИ:                                                       │
+│    • Увеличить пассажиропоток на 10%                            │
+│    • Снизить простой автобусов до 5%                            │
+│    • Повысить удовлетворенность пассажиров до 90%               │
+│                                                                  │
+│  📅 МЕРОПРИЯТИЯ:                                                │
+│    • 01-07: Оптимизация маршрутов                               │
+│    • 08-14: Техническое обслуживание                            │
+│    • 15-21: Внедрение мониторинга в реальном времени           │
+│    • 22-30: Анализ эффективности и корректировки               │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+════════════════════════════════════════════════════════════════════
+  Система: SmartTransit Passenger Flow Management System v1.0
+  Контакт: analytics@smarttransit.ru | +7 (495) 123-45-67
+  Аналитик: Иванов А.П.
+════════════════════════════════════════════════════════════════════
+`;
+        }
+
+        function generateRouteReport(data, date, time) {
+            const routeNumber = data.parameters?.route || '7A';
+            
+            return `
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                ОТЧЕТ ПО МАРШРУТУ №${routeNumber}
+                АНАЛИЗ ЭФФЕКТИВНОСТИ И ЗАГРУЖЕННОСТИ
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+📅 Дата анализа: ${date}
+🕐 Время генерации: ${time}
+
+─────────────────────────────────────────────────────────────────
+                        ХАРАКТЕРИСТИКИ МАРШРУТА
+─────────────────────────────────────────────────────────────────
+
+• Номер маршрута: ${routeNumber}
+• Тип маршрута: Городской
+• Количество остановок: 18
+• Протяженность: 7.5 км
+• Среднее время рейса: 45 мин.
+• Интервалы движения: 10-15 мин.
+
+─────────────────────────────────────────────────────────────────
+                    СТАТИСТИКА ПАССАЖИРОПОТОКА
+─────────────────────────────────────────────────────────────────
+
+📊 ОБЩИЕ ПОКАЗАТЕЛИ:
+  ├─ Среднесуточный пассажиропоток: 1,524 чел.
+  ├─ Загрузка в час пик: 85%
+  ├─ Коэффициент заполнения: 78%
+  └─ Выручка за день: 76,200 руб.
+
+🕒 РАСПРЕДЕЛЕНИЕ ПО ЧАСАМ:
+  06:00-07:00: 120 чел. (█░░░░░░░░░)
+  08:00-09:00: 450 чел. (███████░░░)
+  10:00-11:00: 280 чел. (████░░░░░░)
+  12:00-13:00: 320 чел. (█████░░░░░)
+  14:00-15:00: 250 чел. (████░░░░░░)
+  16:00-17:00: 380 чел. (██████░░░░)
+  18:00-19:00: 420 чел. (███████░░░)
+  20:00-21:00: 180 чел. (███░░░░░░░)
+
+📍 ЗАГРУЖЕННОСТЬ ОСТАНОВОК:
+  1. Центральная площадь: 185 чел./час
+  2. Университет: 162 чел./час
+  3. Железнодорожный вокзал: 148 чел./час
+  4. Торговый центр: 135 чел./час
+  5. Стадион: 112 чел./час
+
+─────────────────────────────────────────────────────────────────
+                        АНАЛИЗ ЭФФЕКТИВНОСТИ
+─────────────────────────────────────────────────────────────────
+
+✅ СИЛЬНЫЕ СТОРОНЫ:
+  • Высокий пассажиропоток в часы пик
+  • Стабильный интервал движения
+  • Хорошее покрытие жилых районов
+
+⚠️ ПРОБЛЕМНЫЕ МОМЕНТЫ:
+  • Перегруженность на центральных остановках
+  • Длительное время ожидания в вечерние часы
+  • Недостаточная вместимость автобусов
+
+📈 ПОТЕНЦИАЛ УЛУЧШЕНИЙ:
+  • Введение экспресс-рейсов
+  • Увеличение частоты движения в часы пик
+  • Использование автобусов большей вместимости
+
+─────────────────────────────────────────────────────────────────
+                        РЕКОМЕНДАЦИИ
+─────────────────────────────────────────────────────────────────
+
+1. Ввести 2 дополнительных автобуса на маршрут в часы пик
+2. Рассмотреть возможность запуска экспресс-варианта маршрута
+3. Увеличить интервалы движения в вечернее время до 20 минут
+4. Установить дополнительные остановочные павильоны
+
+─────────────────────────────────────────────────────────────────
+  Отчет подготовлен отделом аналитики SmartTransit
+  Следующий анализ: ${new Date(Date.now() + 30 * 86400000).toLocaleDateString()}
+  Контакт по вопросам: routes@smarttransit.ru
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+`;
+        }
+
+        function generateGeneralReport(data, date, time) {
+            return `
+====================================================================
+                         ОБЩИЙ ОТЧЕТ
+====================================================================
+
+Отчет сгенерирован: ${date} ${time}
+
+Основные показатели:
+• Общее количество пассажиров: ${data.statistics.totalPassengers}
+• Количество автобусов: ${data.statistics.totalBuses}
+• Количество остановок: ${data.statistics.totalStops}
+
+Данные собраны автоматически системой SmartTransit.
+====================================================================
+`;
+        }
+
+        // ================ ФУНКЦИИ РАБОТЫ С ОТЧЕТАМИ ================
+        function viewReport(reportId) {
+            const report = reportStorage.getReport(reportId);
+            if (!report) {
+                showNotification('Отчет не найден', 'error');
+                return;
+            }
+            
+            currentReportId = reportId;
+            document.getElementById('reportContent').textContent = report.content || 'Нет содержимого';
+            
+            // Настраиваем кнопку скачивания
+            const downloadBtn = document.getElementById('downloadReportBtn');
+            downloadBtn.onclick = () => downloadReport(reportId);
+            
+            openModal('reportModal');
+        }
+
+        function downloadReport(reportId) {
+            const report = reportStorage.getReport(reportId);
+            if (!report) {
+                showNotification('Отчет не найден', 'error');
+                return;
+            }
+            
+            const filename = `${report.name.replace(/\s+/g, '_')}_${new Date(report.createdAt).toISOString().split('T')[0]}.txt`;
+            downloadFile(report.content || 'Нет содержимого', filename, 'text/plain');
+            showNotification(`Отчет "${report.name}" скачан`, 'success');
+        }
+
+        function deleteReport(reportId) {
+            if (confirm('Вы уверены, что хотите удалить этот отчет?')) {
+                reportStorage.deleteReport(reportId);
+                showNotification('Отчет удален', 'success');
+                loadReportsHistory();
+                
+                // Обновляем счетчик на дашборде
+                if (document.getElementById('reports-count')) {
+                    document.getElementById('reports-count').textContent = reportStorage.getStats().total;
+                }
+            }
+        }
+
+        function refreshReports() {
+            loadReportsHistory();
+            showNotification('Список отчетов обновлен', 'success');
+        }
+
+        // Замените эту функцию в вашем script.js
+async function exportData(format) {
+    try {
+        showNotification(`Начинаем экспорт данных в формате ${format.toUpperCase()}...`, 'info');
+        
+        // Собираем данные для экспорта
+        const exportData = await collectExportData();
+        
+        let content, filename, mimeType;
+        
+        switch(format.toLowerCase()) {
+            case 'csv':
+                // Используем BOM для правильной кодировки UTF-8 в Excel
+                content = '\ufeff' + convertToCSV(exportData);
+                filename = `export_${new Date().toISOString().split('T')[0]}.csv`;
+                mimeType = 'text/csv;charset=utf-8;';
+                break;
+            case 'excel':
+                content = '\ufeff' + convertToCSV(exportData);
+                filename = `export_${new Date().toISOString().split('T')[0]}.xls`;
+                mimeType = 'application/vnd.ms-excel;charset=utf-8';
+                break;
+            case 'json':
+                content = JSON.stringify(exportData, null, 2);
+                filename = `export_${new Date().toISOString().split('T')[0]}.json`;
+                mimeType = 'application/json;charset=utf-8';
+                break;
+            default:
+                throw new Error(`Неподдерживаемый формат: ${format}`);
+        }
+        
+        downloadFile(content, filename, mimeType);
+        showNotification(`Данные экспортированы в ${format.toUpperCase()}`, 'success');
+        
+    } catch (error) {
+        console.error('Ошибка экспорта:', error);
+        showNotification(`Ошибка экспорта: ${error.message}`, 'error');
+    }
+}
+
+// Добавьте функцию для правильного форматирования CSV
+function convertToCSV(data) {
+    let csv = '';
+    
+    // Экспорт автобусов
+    csv += 'АВТОБУСЫ\n';
+    csv += 'ID,Модель,Маршрут,Статус\n';
+    data.buses.forEach(bus => {
+        csv += `${bus.id},${bus.model},${bus.route},${bus.status}\n`;
+    });
+    
+    csv += '\nОСТАНОВКИ\n';
+    csv += 'ID,Название,Широта,Долгота\n';
+    data.stops.forEach(stop => {
+        // Экранируем запятые в названиях
+        const name = stop.name.includes(',') ? `"${stop.name}"` : stop.name;
+        csv += `${stop.id},${name},${stop.lat},${stop.lon}\n`;
+    });
+    
+    csv += '\nПАССАЖИРОПОТОК\n';
+    csv += 'ID,Время,Автобус ID,Остановка ID,Вошедшие,Вышедшие\n';
+    data.passengers.forEach(p => {
+        csv += `${p.id},${p.timestamp},${p.busId},${p.stopId},${p.entered},${p.exited}\n`;
+    });
+    
+    return csv;
+}
+
+// Альтернативная функция для Excel с разделителем табуляции
+function convertToExcel(data) {
+    let excel = '';
+    
+    // Экспорт автобусов
+    excel += 'АВТОБУСЫ\n';
+    excel += 'ID\tМодель\tМаршрут\tСтатус\n';
+    data.buses.forEach(bus => {
+        excel += `${bus.id}\t${bus.model}\t${bus.route}\t${bus.status}\n`;
+    });
+    
+    excel += '\nОСТАНОВКИ\n';
+    excel += 'ID\tНазвание\tШирота\tДолгота\n';
+    data.stops.forEach(stop => {
+        excel += `${stop.id}\t${stop.name}\t${stop.lat}\t${stop.lon}\n`;
+    });
+    
+    excel += '\nПАССАЖИРОПОТОК\n';
+    excel += 'ID\tВремя\tАвтобус ID\tОстановка ID\tВошедшие\tВышедшие\n';
+    data.passengers.forEach(p => {
+        excel += `${p.id}\t${p.timestamp}\t${p.busId}\t${p.stopId}\t${p.entered}\t${p.exited}\n`;
+    });
+    
+    return excel;
+}
+
+// Обновите функцию downloadFile
+function downloadFile(content, filename, mimeType) {
+    // Для CSV/Excel используем Blob с кодировкой UTF-8
+    const blob = new Blob([content], { 
+        type: mimeType 
+    });
+    
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    URL.revokeObjectURL(url);
+}
+
+// Альтернативный вариант - функция для скачивания как Excel напрямую
+function exportToExcel(data) {
+    // Создаем Excel-совместимый CSV с табуляцией
+    let excelContent = '';
+    
+    // Лист "Автобусы"
+    excelContent += 'ID\tМодель\tМаршрут\tСтатус\n';
+    data.buses.forEach(bus => {
+        excelContent += `${bus.id}\t${bus.model}\t${bus.route}\t${bus.status}\n`;
+    });
+    
+    excelContent += '\n'; // Разделитель между листами
+    
+    // Лист "Остановки"
+    excelContent += 'ID\tНазвание\tШирота\tДолгота\n';
+    data.stops.forEach(stop => {
+        excelContent += `${stop.id}\t${stop.name}\t${stop.lat}\t${stop.lon}\n`;
+    });
+    
+    excelContent += '\n';
+    
+    // Лист "Пассажиропоток"
+    excelContent += 'ID\tВремя\tАвтобус ID\tОстановка ID\tВошедшие\tВышедшие\n';
+    data.passengers.forEach(p => {
+        excelContent += `${p.id}\t${p.timestamp}\t${p.busId}\t${p.stopId}\t${p.entered}\t${p.exited}\n`;
+    });
+    
+    // Добавляем BOM для UTF-8
+    const bom = '\ufeff';
+    const blob = new Blob([bom + excelContent], {
+        type: 'application/vnd.ms-excel;charset=utf-8'
+    });
+    
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `export_${new Date().toISOString().split('T')[0]}.xls`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
+// Или используйте библиотеку для работы с Excel
+async function exportWithSheetJS() {
+    // Если подключена библиотека SheetJS (xlsx)
+    if (window.XLSX) {
+        try {
+            const data = await collectExportData();
+            
+            // Создаем рабочую книгу
+            const wb = XLSX.utils.book_new();
+            
+            // Лист "Автобусы"
+            const busData = data.buses.map(bus => [
+                bus.id,
+                bus.model,
+                bus.route,
+                bus.status
+            ]);
+            const busSheet = XLSX.utils.aoa_to_sheet([
+                ['ID', 'Модель', 'Маршрут', 'Статус'],
+                ...busData
+            ]);
+            XLSX.utils.book_append_sheet(wb, busSheet, 'Автобусы');
+            
+            // Лист "Остановки"
+            const stopData = data.stops.map(stop => [
+                stop.id,
+                stop.name,
+                stop.lat,
+                stop.lon
+            ]);
+            const stopSheet = XLSX.utils.aoa_to_sheet([
+                ['ID', 'Название', 'Широта', 'Долгота'],
+                ...stopData
+            ]);
+            XLSX.utils.book_append_sheet(wb, stopSheet, 'Остановки');
+            
+            // Лист "Пассажиропоток"
+            const passengerData = data.passengers.map(p => [
+                p.id,
+                p.timestamp,
+                p.busId,
+                p.stopId,
+                p.entered,
+                p.exited
+            ]);
+            const passengerSheet = XLSX.utils.aoa_to_sheet([
+                ['ID', 'Время', 'Автобус ID', 'Остановка ID', 'Вошедшие', 'Вышедшие'],
+                ...passengerData
+            ]);
+            XLSX.utils.book_append_sheet(wb, passengerSheet, 'Пассажиропоток');
+            
+            // Скачиваем файл
+            XLSX.writeFile(wb, `export_${new Date().toISOString().split('T')[0]}.xlsx`);
+            showNotification('Данные экспортированы в Excel', 'success');
+            
+        } catch (error) {
+            console.error('Ошибка экспорта через SheetJS:', error);
+            showNotification('Ошибка экспорта в Excel', 'error');
+        }
+    } else {
+        // Fallback на простой CSV
+        exportData('csv');
+    }
+}
+
+        async function collectExportData() {
+            // В реальном приложении здесь будут запросы к API
+            // Для демонстрации используем тестовые данные
+            return {
+                buses: [
+                    { id: 1, model: 'ПАЗ-3205', route: '7A', status: 'active' },
+                    { id: 2, model: 'ЛиАЗ-5292', route: '12B', status: 'active' },
+                    { id: 3, model: 'МАЗ-103', route: '25C', status: 'maintenance' }
+                ],
+                stops: [
+                    { id: 1, name: 'Центральная площадь', lat: 55.7558, lon: 37.6173 },
+                    { id: 2, name: 'Железнодорожный вокзал', lat: 55.7556, lon: 37.6563 },
+                    { id: 3, name: 'Университет', lat: 55.7538, lon: 37.6198 }
+                ],
+                passengers: [
+                    { id: 1, timestamp: '2024-01-15T08:30:00', busId: 1, stopId: 1, entered: 15, exited: 8 },
+                    { id: 2, timestamp: '2024-01-15T09:15:00', busId: 2, stopId: 2, entered: 12, exited: 5 },
+                    { id: 3, timestamp: '2024-01-15T10:00:00', busId: 1, stopId: 3, entered: 8, exited: 10 }
+                ]
+            };
+        }
+
+        function convertToCSV(data) {
+            let csv = '';
+            
+            // Экспорт автобусов
+            csv += 'АВТОБУСЫ\n';
+            csv += 'ID,Модель,Маршрут,Статус\n';
+            data.buses.forEach(bus => {
+                csv += `${bus.id},${bus.model},${bus.route},${bus.status}\n`;
+            });
+            
+            csv += '\nОСТАНОВКИ\n';
+            csv += 'ID,Название,Широта,Долгота\n';
+            data.stops.forEach(stop => {
+                csv += `${stop.id},${stop.name},${stop.lat},${stop.lon}\n`;
+            });
+            
+            csv += '\nПАССАЖИРОПОТОК\n';
+            csv += 'ID,Время,Автобус ID,Остановка ID,Вошедшие,Вышедшие\n';
+            data.passengers.forEach(p => {
+                csv += `${p.id},${p.timestamp},${p.busId},${p.stopId},${p.entered},${p.exited}\n`;
+            });
+            
+            return csv;
+        }
+
+        // ================ ДРУГИЕ СЕКЦИИ (УПРОЩЕННЫЕ) ================
+        async function loadBuses() {
+            const html = `
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Управление автобусами</h3>
+                        <button class="btn btn-primary" onclick="showNotification('Функция в разработке', 'info')">
+                            <i class="fas fa-plus"></i> Добавить автобус
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Модель</th>
+                                    <th>Маршрут</th>
+                                    <th>Статус</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td colspan="4" class="text-center">Загрузка...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('contentArea').innerHTML = html;
+            
+            // Загружаем данные
+            setTimeout(() => {
+                const tbody = document.querySelector('tbody');
+                tbody.innerHTML = `
+                    <tr>
+                        <td>1</td>
+                        <td>ПАЗ-3205</td>
+                        <td>7A</td>
+                        <td><span class="status-badge success">Активен</span></td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>ЛиАЗ-5292</td>
+                        <td>12B</td>
+                        <td><span class="status-badge success">Активен</span></td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>МАЗ-103</td>
+                        <td>25C</td>
+                        <td><span class="status-badge warning">Обслуживание</span></td>
+                    </tr>
+                `;
+            }, 500);
+        }
+
+        async function loadStops() {
+            const html = `
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Управление остановками</h3>
+                        <button class="btn btn-primary" onclick="showNotification('Функция в разработке', 'info')">
+                            <i class="fas fa-plus"></i> Добавить остановку
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Название</th>
+                                    <th>Широта</th>
+                                    <th>Долгота</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td colspan="4" class="text-center">Загрузка...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('contentArea').innerHTML = html;
+            
+            // Загружаем данные
+            setTimeout(() => {
+                const tbody = document.querySelector('tbody');
+                tbody.innerHTML = `
+                    <tr>
+                        <td>1</td>
+                        <td>Центральная площадь</td>
+                        <td>55.7558</td>
+                        <td>37.6173</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Железнодорожный вокзал</td>
+                        <td>55.7556</td>
+                        <td>37.6563</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Университет</td>
+                        <td>55.7538</td>
+                        <td>37.6198</td>
+                    </tr>
+                `;
+            }, 500);
+        }
+
+        async function loadPassengers() {
+            const html = `
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Учет пассажиропотока</h3>
+                        <button class="btn btn-primary" onclick="showNotification('Функция в разработке', 'info')">
+                            <i class="fas fa-plus"></i> Добавить запись
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Время</th>
+                                    <th>Автобус</th>
+                                    <th>Остановка</th>
+                                    <th>Вошедшие</th>
+                                    <th>Вышедшие</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td colspan="6" class="text-center">Загрузка...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('contentArea').innerHTML = html;
+            
+            // Загружаем данные
+            setTimeout(() => {
+                const tbody = document.querySelector('tbody');
+                tbody.innerHTML = `
+                    <tr>
+                        <td>1</td>
+                        <td>2024-01-15 08:30</td>
+                        <td>Автобус 1 (7A)</td>
+                        <td>Центральная площадь</td>
+                        <td>15</td>
+                        <td>8</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>2024-01-15 09:15</td>
+                        <td>Автобус 2 (12B)</td>
+                        <td>Железнодорожный вокзал</td>
+                        <td>12</td>
+                        <td>5</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>2024-01-15 10:00</td>
+                        <td>Автобус 1 (7A)</td>
+                        <td>Университет</td>
+                        <td>8</td>
+                        <td>10</td>
+                    </tr>
+                `;
+            }, 500);
+        }
+
+        // ================ ИНИЦИАЛИЗАЦИЯ ================
+        function logout() {
+            showNotification('Выход из системы...', 'info');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        }
+
+        // Инициализация навигации
+        document.addEventListener('DOMContentLoaded', function() {
+            // Назначаем обработчики навигации
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const section = this.dataset.section;
+                    loadSection(section);
+                });
+            });
+            
+            // Добавляем тестовые отчеты при первом запуске
+            if (reportStorage.getReports().length === 0) {
+                addSampleReports();
+            }
+            
+            // Загружаем начальную секцию
+            loadSection('dashboard');
+            
+            // Обновляем статистику каждые 30 секунд
+            setInterval(() => {
+                if (currentSection === 'dashboard') {
+                    updateDashboardStats();
+                }
+            }, 30000);
+        });
+
+        function addSampleReports() {
+            const sampleReports = [
+                {
+                    type: 'daily',
+                    name: 'Суточный отчет по пассажиропотоку',
+                    content: 'Пример суточного отчета с данными за сегодняшний день.',
+                    createdAt: new Date(Date.now() - 86400000).toISOString(),
+                    status: 'completed',
+                    size: '1.2 KB'
+                },
+                {
+                    type: 'weekly',
+                    name: 'Недельный анализ работы транспорта',
+                    content: 'Анализ работы за прошлую неделю с рекомендациями по оптимизации.',
+                    createdAt: new Date(Date.now() - 7 * 86400000).toISOString(),
+                    status: 'completed',
+                    size: '2.5 KB'
+                },
+                {
+                    type: 'route',
+                    name: 'Отчет по маршруту 7A',
+                    content: 'Детальный анализ эффективности маршрута 7A за январь 2024.',
+                    createdAt: new Date(Date.now() - 3 * 86400000).toISOString(),
+                    status: 'completed',
+                    size: '1.8 KB'
+                }
+            ];
+            
+            sampleReports.forEach(report => {
+                reportStorage.addReport(report);
+            });
+        }
+    </script>
 </body>
 </html>
-

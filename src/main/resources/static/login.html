@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход в систему</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+        
+        .login-box {
+            background: white;
+            padding: 2.5rem;
+            border-radius: var(--radius);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .login-logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .login-logo i {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .login-logo h1 {
+            font-size: 1.8rem;
+            color: var(--dark-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .login-logo p {
+            color: var(--gray-color);
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--dark-color);
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 0.5rem;
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .test-credentials {
+            background: #f0f9ff;
+            border-left: 4px solid var(--primary-color);
+            padding: 1rem;
+            margin-top: 2rem;
+            border-radius: var(--radius);
+        }
+        
+        .test-credentials h3 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            color: var(--dark-color);
+        }
+        
+        .test-credentials code {
+            display: block;
+            padding: 0.5rem;
+            background: white;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+            font-family: monospace;
+        }
+        
+        .error-message {
+            background: #fee;
+            color: #d00;
+            padding: 0.75rem;
+            border-radius: var(--radius);
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--danger-color);
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <div class="login-logo">
+                <i class="fas fa-bus"></i>
+                <h1>SmartTransit</h1>
+                <p>Система управления пассажиропотоком</p>
+            </div>
+            
+            <div id="errorMessage" class="error-message"></div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label" for="username">
+                        <i class="fas fa-user"></i> Имя пользователя
+                    </label>
+                    <input type="text" 
+                           id="username" 
+                           class="form-input" 
+                           placeholder="Введите имя пользователя"
+                           required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="password">
+                        <i class="fas fa-lock"></i> Пароль
+                    </label>
+                    <input type="password" 
+                           id="password" 
+                           class="form-input" 
+                           placeholder="Введите пароль"
+                           required>
+                </div>
+                
+                <button type="submit" class="login-btn" id="loginBtn">
+                    <i class="fas fa-sign-in-alt"></i> Войти в систему
+                </button>
+            </form>
+            
+            <div class="test-credentials">
+                <h3><i class="fas fa-key"></i> Тестовые учетные данные:</h3>
+                <code>Логин: admin</code>
+                <code>Пароль: admin123</code>
+                <code>Роль: Администратор (все права)</code>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8080/api';
+        
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            // Показываем индикатор загрузки
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Авторизация...';
+            loginBtn.disabled = true;
+            
+            // Скрываем предыдущие ошибки
+            errorMessage.style.display = 'none';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password }),
+                    credentials: 'include' // Важно для cookies
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Успешный вход
+                    loginBtn.innerHTML = '<i class="fas fa-check"></i> Успешно! Перенаправление...';
+                    loginBtn.style.background = 'linear-gradient(45deg, #10b981, #059669)';
+                    
+                    // Сохраняем информацию о пользователе
+                    localStorage.setItem('user', JSON.stringify(data));
+                    
+                    // Перенаправляем на главную страницу
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1000);
+                    
+                } else {
+                    throw new Error(`Ошибка авторизации: ${response.status}`);
+                }
+                
+            } catch (error) {
+                console.error('Ошибка входа:', error);
+                
+                // Показываем ошибку
+                errorMessage.textContent = 'Неверное имя пользователя или пароль';
+                errorMessage.style.display = 'block';
+                
+                // Возвращаем кнопку в исходное состояние
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Войти в систему';
+                loginBtn.disabled = false;
+            }
+        });
+        
+        // Автофокус на поле ввода
+        document.getElementById('username').focus();
+        
+        // Enter для отправки формы
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.target.type !== 'textarea') {
+                if (e.target.type === 'password') {
+                    document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+                }
+            }
+        });
+    </script>
+</body>
+</html>

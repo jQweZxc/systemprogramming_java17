@@ -9,6 +9,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name = "passenger_counts")
 @Data
@@ -22,11 +24,13 @@ public class PassengerCount {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bus_id", nullable = false)
+
     @NotNull(message = "Автобус не может быть пустым")
     private Bus bus;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "stop_id", nullable = false)
+
     @NotNull(message = "Остановка не может быть пустой")
     private Stop stop;
 
